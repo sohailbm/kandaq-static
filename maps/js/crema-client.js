@@ -274,9 +274,43 @@ class CremaClient {
         const allData = await response.json();
         
         // Extract data for the requested time range
-        const timeRangeData = allData.metrics?.[timeRange];
+        let timeRangeData = allData.metrics?.[timeRange];
+        
+        // If exact time range not found, try fallback to broader ranges
         if (!timeRangeData) {
-            throw new Error(`Time range '${timeRange}' not found in cache file`);
+            console.warn(`⚠️ Time range '${timeRange}' not found, trying fallback...`);
+            
+            // Fallback order: try broader time ranges
+            const fallbackMap = {
+                'today': ['this_week', 'this_month', 'this_year'],
+                'this_week': ['this_month', 'this_year'],
+                'last_week': ['this_month', 'this_year', 'last_month'],
+                'this_month': ['this_quarter', 'this_year'],
+                'last_month': ['this_quarter', 'this_year', 'last_quarter', 'last_year'],
+                'this_quarter': ['this_year'],
+                'last_quarter': ['this_year', 'last_year'],
+                'last_year': ['this_year', 'all_time'],
+                'all_time': ['this_year']
+            };
+            
+            const fallbacks = fallbackMap[timeRange] || [];
+            for (const fallback of fallbacks) {
+                if (allData.metrics?.[fallback]) {
+                    console.log(`✅ Using fallback time range: ${fallback}`);
+                    timeRangeData = allData.metrics[fallback];
+                    break;
+                }
+            }
+            
+            // If still not found, use this_year as final fallback
+            if (!timeRangeData && allData.metrics?.['this_year']) {
+                console.log(`✅ Using final fallback: this_year`);
+                timeRangeData = allData.metrics['this_year'];
+            }
+            
+            if (!timeRangeData) {
+                throw new Error(`Time range '${timeRange}' not found in cache file and no fallback available`);
+            }
         }
         
         // Return in the same format as old separate files
