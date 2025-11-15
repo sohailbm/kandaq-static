@@ -1223,14 +1223,13 @@ const API_CONFIG = {
     REFRESH_INTERVAL: 60000      // 1 minute
 };
 
-// Determine mode: default to 'cache' for static deployment
-// Can be overridden by setting window.CREMA_MODE_OVERRIDE before this script runs
-const CREMA_MODE = window.CREMA_MODE_OVERRIDE || 'cache';
+// Force cache mode only - no API fallbacks for static deployment
+const CREMA_MODE = 'cache';
 
-// Initialize Crema Client
+// Initialize Crema Client (cache mode only)
 const crema = new CremaClient(TENANT_ID, {
-    mode: CREMA_MODE,
-    apiUrl: API_URL,
+    mode: 'cache',
+    apiUrl: API_URL, // Not used in cache mode, but kept for compatibility
     cacheDir: 'data'
 });
 
@@ -1257,18 +1256,10 @@ async function fetchCremaData() {
             console.warn('⚠️ Crema data is null or empty');
         }
     } catch (error) {
-        if (crema.getMode() === 'cache') {
-            // Cache mode: Crema data is optional - app can work without it
-            console.warn('⚠️ Crema data not found in cache files (optional):', error.message);
-            console.log('ℹ️ App will continue without Crema data. Some features may be limited.');
-            // Don't show error - Crema data is optional for basic functionality
-            CREMA_DATA = null;
-        } else {
-            // Real-time mode: API error
-            console.error('❌ Error fetching Crema data from API:', error);
-            // Continue without Crema data - app can still work with basic functionality
-            CREMA_DATA = null;
-        }
+        // Cache mode only: Crema data is optional - app can work without it
+        console.warn('⚠️ Crema data not found in cache files (optional):', error.message);
+        console.log('ℹ️ App will continue without Crema data. Some features may be limited.');
+        CREMA_DATA = null;
     }
 }
 
@@ -2990,46 +2981,37 @@ async function fetchMetricsWithTimeRange(timeRange = 'this_year') {
         // Use CremaClient to get metrics (handles cache/realtime mode)
         let metrics, sourceTargets, cacheData;
         
-        if (crema.getMode() === 'cache') {
-            // Cache mode: load from cache file
-            // For encrypted files, still use loadDecryptedDashboard if available
-            if (typeof loadDecryptedDashboard === 'function') {
-                try {
-                    console.log('📦 Loading from encrypted cache file...');
-                    cacheData = await loadDecryptedDashboard(kandaqTimeRange);
-                    metrics = cacheData?.data?.metrics || cacheData?.metrics;
-                    sourceTargets = cacheData?.source_targets || {};
-                } catch (e) {
-                    // If encryption fails, try CremaClient (for unencrypted files)
-                    console.log('⚠️ Encrypted file load failed, trying CremaClient...');
-                    metrics = await crema.getMetrics(kandaqTimeRange);
-                    // For source_targets, we'd need to load the full cache file
-                    // For now, try to get it from cache if possible
-                    try {
-                        const fullCache = await crema.loadCacheFile(kandaqTimeRange);
-                        sourceTargets = fullCache?.source_targets || {};
-                    } catch (e2) {
-                        sourceTargets = {};
-                    }
-                }
-            } else {
-                // No encryption, use CremaClient directly
+        // Cache mode only: load from cache file
+        // For encrypted files, still use loadDecryptedDashboard if available
+        if (typeof loadDecryptedDashboard === 'function') {
+            try {
+                console.log('📦 Loading from encrypted cache file...');
+                cacheData = await loadDecryptedDashboard(kandaqTimeRange);
+                metrics = cacheData?.data?.metrics || cacheData?.metrics;
+                sourceTargets = cacheData?.source_targets || {};
+            } catch (e) {
+                // If encryption fails, try CremaClient (for unencrypted files)
+                console.log('⚠️ Encrypted file load failed, trying CremaClient...');
                 metrics = await crema.getMetrics(kandaqTimeRange);
-                // Try to get source_targets from cache
+                // For source_targets, we'd need to load the full cache file
                 try {
                     const fullCache = await crema.loadCacheFile(kandaqTimeRange);
                     sourceTargets = fullCache?.source_targets || {};
-                    cacheData = fullCache;
-                } catch (e) {
+                } catch (e2) {
                     sourceTargets = {};
                 }
             }
         } else {
-            // Real-time mode: fetch from API
+            // No encryption, use CremaClient directly
             metrics = await crema.getMetrics(kandaqTimeRange);
-            // For API mode, source_targets would come from API response
-            // For now, set empty (can be enhanced later)
-            sourceTargets = {};
+            // Try to get source_targets from cache
+            try {
+                const fullCache = await crema.loadCacheFile(kandaqTimeRange);
+                sourceTargets = fullCache?.source_targets || {};
+                cacheData = fullCache;
+            } catch (e) {
+                sourceTargets = {};
+            }
         }
         
         if (!metrics) {
@@ -3037,23 +3019,23 @@ async function fetchMetricsWithTimeRange(timeRange = 'this_year') {
         }
         
         console.log('✅ Loaded metrics successfully');
-        
+                    
         // Process metrics
-        updateMetrics(metrics, timeRange, sourceTargets);
-        
+                    updateMetrics(metrics, timeRange, sourceTargets);
+                    
         // Process board analyses for nonprofits (works in both cache and realtime modes)
-        if (BUSINESS_TYPE === 'non_profit_organization') {
+                    if (BUSINESS_TYPE === 'non_profit_organization') {
             let boardMetrics = metrics;
             
             // In cache mode, try to get full cache data if board analyses are missing
             if (crema.getMode() === 'cache' && cacheData) {
                 boardMetrics = cacheData?.metrics || cacheData?.data?.metrics || metrics;
-                
+                        
                 // If metrics only has basic keys, try to get full cache data
-                const metricsKeys = Object.keys(boardMetrics || {});
-                if (metricsKeys.length <= 3 && !boardMetrics?.revenue_by_source) {
+                        const metricsKeys = Object.keys(boardMetrics || {});
+                        if (metricsKeys.length <= 3 && !boardMetrics?.revenue_by_source) {
                     console.warn('⚠️ Board analyses missing, fetching full cache...');
-                    try {
+                            try {
                         const fullCache = await crema.loadCacheFile(kandaqTimeRange);
                         boardMetrics = fullCache?.metrics || boardMetrics;
                     } catch (e) {
@@ -3066,85 +3048,85 @@ async function fetchMetricsWithTimeRange(timeRange = 'this_year') {
             // The API includes them in the metrics object
             
             // Process board analyses
-            const boardAnalysisKeys = Object.keys(boardMetrics || {}).filter(k => 
-                ['revenue_by_source', 'expenses_by_type', 'programs', 'top_donors', 'financial_health', 'funds'].includes(k)
-            );
-            console.log('📊 Board analyses keys found:', boardAnalysisKeys);
-            
-            if (boardMetrics?.revenue_by_source) {
-                updateRevenueBySource(boardMetrics.revenue_by_source);
-            }
-            if (boardMetrics?.expenses_by_type) {
-                updateExpensesByType(boardMetrics.expenses_by_type);
-            }
-            if (boardMetrics?.programs) {
-                updatePrograms(boardMetrics.programs);
-            }
-            if (boardMetrics?.top_donors) {
-                updateTopDonors(boardMetrics.top_donors);
-            }
-            if (boardMetrics?.funds) {
-                updateFunds(boardMetrics.funds);
-            } else {
+                        const boardAnalysisKeys = Object.keys(boardMetrics || {}).filter(k => 
+                            ['revenue_by_source', 'expenses_by_type', 'programs', 'top_donors', 'financial_health', 'funds'].includes(k)
+                        );
+                        console.log('📊 Board analyses keys found:', boardAnalysisKeys);
+                        
+                        if (boardMetrics?.revenue_by_source) {
+                            updateRevenueBySource(boardMetrics.revenue_by_source);
+                        }
+                        if (boardMetrics?.expenses_by_type) {
+                            updateExpensesByType(boardMetrics.expenses_by_type);
+                        }
+                        if (boardMetrics?.programs) {
+                            updatePrograms(boardMetrics.programs);
+                        }
+                        if (boardMetrics?.top_donors) {
+                            updateTopDonors(boardMetrics.top_donors);
+                        }
+                        if (boardMetrics?.funds) {
+                            updateFunds(boardMetrics.funds);
+                        } else {
                 // Show empty state for funds
-                const sectionContainer = document.getElementById('funds-section-container');
-                if (sectionContainer) {
-                    sectionContainer.style.display = 'block';
-                    const tbody = document.getElementById('funds-tbody');
-                    if (tbody) {
-                        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-secondary);">Fund data not available</td></tr>';
+                            const sectionContainer = document.getElementById('funds-section-container');
+                            if (sectionContainer) {
+                                sectionContainer.style.display = 'block';
+                                const tbody = document.getElementById('funds-tbody');
+                                if (tbody) {
+                                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-secondary);">Fund data not available</td></tr>';
+                                }
+                            }
+                        }
                     }
-                }
-            }
+    
+    // Format total_size if present (for static file data)
+    if (metrics && metrics.total_size && typeof metrics.total_size === 'number') {
+        metrics.total_size = formatBytes(metrics.total_size);
+    }
+    
+    // Merge collection stats from Crema if available (for file_count/total_size fallback)
+    if (CREMA_DATA && CREMA_DATA.collectionStats) {
+        const stats = CREMA_DATA.collectionStats;
+        if (stats.fileCount !== undefined && metrics.total_files === undefined) {
+            metrics.total_files = stats.fileCount;
         }
-        
-        // Format total_size if present (for static file data)
-        if (metrics && metrics.total_size && typeof metrics.total_size === 'number') {
-            metrics.total_size = formatBytes(metrics.total_size);
+        if (stats.totalSizeBytes !== undefined && metrics.total_size === undefined && typeof metrics.total_size !== 'string') {
+            metrics.total_size = formatBytes(stats.totalSizeBytes);
         }
-        
-        // Merge collection stats from Crema if available (for file_count/total_size fallback)
-        if (CREMA_DATA && CREMA_DATA.collectionStats) {
-            const stats = CREMA_DATA.collectionStats;
-            if (stats.fileCount !== undefined && metrics.total_files === undefined) {
-                metrics.total_files = stats.fileCount;
-            }
-            if (stats.totalSizeBytes !== undefined && metrics.total_size === undefined && typeof metrics.total_size !== 'string') {
-                metrics.total_size = formatBytes(stats.totalSizeBytes);
-            }
-        }
-        
-        // Update time range indicator
-        const timeRangeLabels = {
-            'today': 'Today',
-            'this_week': 'This Week',
-            'last_week': 'Last Week',
+    }
+    
+    // Update time range indicator
+    const timeRangeLabels = {
+        'today': 'Today',
+        'this_week': 'This Week',
+        'last_week': 'Last Week',
             'this_month': 'This Month',
-            'last_month': 'Last Month',
+        'last_month': 'Last Month',
             'this_quarter': 'This Quarter',
-            'last_quarter': 'Last Quarter',
+        'last_quarter': 'Last Quarter',
             'this_year': 'This Year',
-            'last_year': 'Last Year',
-            'all_time': 'All Time'
-        };
+        'last_year': 'Last Year',
+        'all_time': 'All Time'
+    };
         let timeRangeLabel = timeRangeLabels[timeRange] || (timeRange.startsWith('year_') ? timeRange.split('_')[1] : timeRange);
         
-        const metricsSection = document.querySelector('.metrics-section h2');
-        if (metricsSection) {
-            const existingLabel = metricsSection.querySelector('.time-range-label');
-            if (existingLabel) {
-                existingLabel.textContent = ' (' + timeRangeLabel + ')';
-            } else {
-                const label = document.createElement('span');
-                label.className = 'time-range-label';
-                label.style.fontSize = '0.75em';
-                label.style.color = '#6b7280';
-                label.style.fontWeight = 'normal';
-                label.textContent = ' (' + timeRangeLabel + ')';
-                metricsSection.appendChild(label);
-            }
+    const metricsSection = document.querySelector('.metrics-section h2');
+    if (metricsSection) {
+        const existingLabel = metricsSection.querySelector('.time-range-label');
+        if (existingLabel) {
+            existingLabel.textContent = ' (' + timeRangeLabel + ')';
+        } else {
+            const label = document.createElement('span');
+            label.className = 'time-range-label';
+            label.style.fontSize = '0.75em';
+            label.style.color = '#6b7280';
+            label.style.fontWeight = 'normal';
+            label.textContent = ' (' + timeRangeLabel + ')';
+            metricsSection.appendChild(label);
         }
-        
+    }
+    
         // Process metrics for UI (updateMetrics handles the formatting)
         updateMetrics(metrics, timeRange, sourceTargets);
         
@@ -3177,17 +3159,10 @@ async function fetchMetricsWithTimeRange(timeRange = 'this_year') {
     } catch (error) {
         hideLoading('metrics');
         
-        if (crema.getMode() === 'cache') {
-            // Cache mode: fail fast with clear error
-            console.error('❌ Cache file required but missing:', error.message);
-            showError(`Cache file required but missing for time range: ${timeRange}. Please generate cache files.`, 'metrics');
-            updateMetrics({}, timeRange, {});
-        } else {
-            // Real-time mode: API error
-            console.error('❌ Error fetching metrics from API:', error);
-            showError(`Failed to fetch metrics: ${error.message}`, 'metrics');
-            updateMetrics({}, timeRange, {});
-        }
+        // Cache mode only: fail fast with clear error
+        console.error('❌ Cache file required but missing:', error.message);
+        showError(`Cache file required but missing for time range: ${timeRange}. Please generate cache files.`, 'metrics');
+        updateMetrics({}, timeRange, {});
     }
 }
 
