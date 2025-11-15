@@ -4203,8 +4203,8 @@ function createFormattedTextPanel(text, index) {
     html = html.replace(/^## (.*$)/gim, '<h2 style="margin-top: 1.5rem; margin-bottom: 0.75rem; color: #111827; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">$1</h2>');
     html = html.replace(/^# (.*$)/gim, '<h1 style="margin-top: 1.5rem; margin-bottom: 1rem; color: #111827;">$1</h1>');
     
-    // Convert bold
-    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // Convert bold (**text** to <strong>text</strong>)
+    html = html.replace(/\*\*([^*]+?)\*\*/g, '<strong>$1</strong>');
     
     // Convert bullet points
     html = html.replace(/^- (.*$)/gim, '<li style="margin: 0.5rem 0;">$1</li>');
@@ -4704,9 +4704,9 @@ function updateRecommendations(recommendations) {
         box.setAttribute('data-rec-id', recId);
         box.setAttribute('data-priority', priority);
         
-        // Convert markdown bold to HTML in description
+        // Convert markdown bold to HTML in description (**text** to <strong>text</strong>)
         let descriptionHtml = escapeHtml(description);
-        descriptionHtml = descriptionHtml.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        descriptionHtml = descriptionHtml.replace(/\*\*([^*]+?)\*\*/g, '<strong>$1</strong>');
         
         let html = `
             <div class="rec-header">
