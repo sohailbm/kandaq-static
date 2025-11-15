@@ -9,11 +9,9 @@ class CremaClient {
     constructor(tenantId, options = {}) {
         this.tenantId = tenantId;
         this.apiUrl = options.apiUrl || 'http://localhost:9010';
-        // Use absolute path for cache directory to ensure correct resolution
-        // When page is at /tenants/{tenant}/app, data/ should resolve to /tenants/{tenant}/app/data/
-        this.cacheDir = options.cacheDir || (typeof window !== 'undefined' && window.location.pathname.includes('/app/') 
-            ? window.location.pathname.split('/app/')[0] + '/app/data' 
-            : 'data');
+        // Cache directory - use relative path 'data' for subdirectory deployments
+        // The _loadCacheFile method will construct the correct absolute path
+        this.cacheDir = options.cacheDir || 'data';
         
         // Explicit mode: 'cache' or 'realtime' (not a fallback)
         // Default: 'cache' for static deployment, 'realtime' for development
