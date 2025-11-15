@@ -1924,16 +1924,9 @@ function showLoading(section) {
     loadingEl.innerHTML = '';
     
     let sectionEl = null;
-    if (section === 'insights') {
-        sectionEl = document.querySelector('.insights-grid');
-        if (sectionEl) {
-            sectionEl.appendChild(loadingEl);
-        }
-    } else if (section === 'recommendations') {
-        sectionEl = document.querySelector('.recommendations-grid');
-        if (sectionEl) {
-            sectionEl.appendChild(loadingEl);
-        }
+    // Removed insights and recommendations sections for static deployment
+    if (false) { // Disabled for static deployment
+        // Insights and recommendations not available
     } else if (section === 'metrics') {
         // For metrics, insert loading message after the metrics-grid (below it)
         // This prevents the loading message from causing the metrics grid to resize
@@ -1961,11 +1954,8 @@ function hideLoading(section) {
     
     // Reset cursor on section
     let sectionEl = null;
-    if (section === 'insights') {
-        sectionEl = document.querySelector('.insights-grid');
-    } else if (section === 'recommendations') {
-        sectionEl = document.querySelector('.recommendations-grid');
-    } else if (section === 'metrics') {
+    // Removed insights and recommendations sections for static deployment
+    if (section === 'metrics') {
         sectionEl = document.querySelector('.metrics-section');
     }
     
