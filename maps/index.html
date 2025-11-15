@@ -3876,6 +3876,20 @@ async function initializeDashboard() {
     try {
         // Static mode: No readiness check needed
         
+        // Load initial data on page load
+        const timeRangeSelect = document.getElementById('time-range-select');
+        const defaultTimeRange = timeRangeSelect ? timeRangeSelect.value : 'this_year';
+        
+        console.log('📊 Loading initial data for time range:', defaultTimeRange);
+        
+        // Load Crema data and metrics in parallel
+        await Promise.all([
+            fetchCremaData(),
+            fetchMetricsWithTimeRange(defaultTimeRange)
+        ]);
+        
+        console.log('✅ Initial data loaded');
+        
         // Ensure funds section is visible (fallback in case data loading fails)
         setTimeout(() => {
             const fundsSection = document.getElementById('funds-section-container');
