@@ -3290,10 +3290,22 @@ async function fetchMetricsWithTimeRange(timeRange = 'this_year') {
             throw new Error('No metrics data returned');
         }
         
-        // Get source targets from cache if available
-        // Note: We'll need to load the full cache file to get source_targets
-        // For now, use empty object - updateMetrics can handle it
+        // Get source targets and full cache data if available
         let sourceTargets = {};
+        let boardMetrics = metrics;
+        
+        try {
+            // Load full cache file to get source_targets and board analyses
+            const cacheData = await crema.loadCacheFile(kandaqTimeRange);
+            sourceTargets = cacheData?.source_targets || {};
+            // Use full cache metrics for board analyses (may have more data)
+            if (cacheData?.metrics) {
+                boardMetrics = cacheData.metrics;
+            }
+        } catch (e) {
+            console.warn('⚠️ Could not load full cache file:', e);
+            // Continue with metrics-only data
+        }
         
         // Update metrics display
         if (typeof updateMetrics === 'function') {
@@ -3302,9 +3314,6 @@ async function fetchMetricsWithTimeRange(timeRange = 'this_year') {
         
         // Process board analyses for nonprofits
         if (BUSINESS_TYPE === 'non_profit_organization') {
-            // For board analyses, metrics should already contain the needed data
-            // If not, we'd need to access the full cache file, but for now use metrics
-            let boardMetrics = metrics;
             
             // Process board analyses
             if (boardMetrics?.revenue_by_source && typeof updateRevenueBySource === 'function') {
