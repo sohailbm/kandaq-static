@@ -3374,6 +3374,392 @@ async function fetchMetricsWithTimeRange(timeRange = 'this_year') {
     }
 }
 
+// Format bytes helper
+function formatBytes(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+}
+
+// Format metric value based on metric type
+function formatMetricValue(metricId, value) {
+    if (value === null || value === undefined || value === '') {
+        return '—';
+    }
+    
+    // Handle percentage metrics
+    if (metricId.includes('margin') || metricId.includes('percentage') || metricId.includes('ratio')) {
+        const numValue = typeof value === 'string' ? parseFloat(value.replace(/[^0-9.-]/g, '')) : Number(value);
+        if (isNaN(numValue)) return '—';
+        return numValue.toFixed(1) + '%';
+    }
+    
+    // Handle currency metrics
+    if (metricId.includes('revenue') || metricId.includes('expenses') || metricId.includes('income') || 
+        metricId.includes('profit') || metricId.includes('donation') || metricId.includes('amount') ||
+        metricId.includes('total') || metricId.includes('net')) {
+        const numValue = typeof value === 'string' ? parseFloat(value.replace(/[^0-9.-]/g, '')) : Number(value);
+        if (isNaN(numValue)) return '—';
+        return '$' + numValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    
+    // Handle count metrics
+    if (metricId.includes('count') || metricId.includes('number') || metricId.includes('total_')) {
+        const numValue = typeof value === 'string' ? parseFloat(value.replace(/[^0-9.-]/g, '')) : Number(value);
+        if (isNaN(numValue)) return '—';
+        return numValue.toLocaleString('en-US');
+    }
+    
+    // Default: return as-is or format as number if numeric
+    const numValue = typeof value === 'string' ? parseFloat(value.replace(/[^0-9.-]/g, '')) : Number(value);
+    if (!isNaN(numValue)) {
+        return numValue.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    }
+    
+    return String(value);
+}
+
+function updateMetrics(data, timeRange = 'this_year', sourceTargets = {}) {
+    // Update metric cards with real data
+    const timeRangeLabels = {
+        'today': 'Today',
+        'this_week': 'This Week',
+        'last_week': 'Last Week',
+        'this_month': 'This Month',
+        'last_month': 'Last Month',
+        'this_quarter': 'This Quarter',
+        'last_quarter': 'Last Quarter',
+        'this_year': 'This Year',
+        'last_year': 'Last Year',
+        'all_time': 'All Time',
+        'week': 'This Week',
+        'month': 'This Month',
+        'year': 'This Year',
+        'current_year': 'This Year'
+    };
+    let timeRangeLabel;
+    if (timeRange && timeRange.startsWith('year_')) {
+        const year = timeRange.split('_')[1];
+        timeRangeLabel = year;
+    } else {
+        timeRangeLabel = timeRangeLabels[timeRange];
+        if (!timeRangeLabel) {
+            console.warn(`Invalid time range for label: "${timeRange}"`);
+            timeRangeLabel = timeRange;
+        }
+    }
+    
+    // Use sourceTargets parameter if provided, otherwise try to get from data
+    if (!sourceTargets || Object.keys(sourceTargets).length === 0) {
+        sourceTargets = data._source_targets || {};
+    }
+    
+    // Extract targets for the current time range
+    let targetsForTimeRange = {};
+    if (sourceTargets && typeof sourceTargets === 'object') {
+        if (timeRange && sourceTargets[timeRange]) {
+            targetsForTimeRange = sourceTargets[timeRange];
+        } else {
+            targetsForTimeRange = sourceTargets;
+        }
+    }
+    
+    console.log('🔄 updateMetrics called with', Object.keys(data).length, 'metrics');
+    
+    // If no data, show empty state
+    if (!data || Object.keys(data).length === 0) {
+        console.warn('⚠️ No metrics data to display');
+        document.querySelectorAll('.metric-card .metric-value').forEach(el => {
+            el.textContent = '—';
+        });
+        return;
+    }
+    
+    // Board analysis components that are handled separately (not metric cards)
+    const boardAnalysisKeys = ['top_donors', 'programs', 'revenue_by_source', 'expenses_by_type'];
+    
+    Object.keys(data).forEach(metricId => {
+        // Skip internal fields
+        if (metricId.startsWith('_')) return;
+        
+        // Skip board analysis components (handled separately)
+        if (boardAnalysisKeys.includes(metricId)) return;
+        
+        const element = document.querySelector('[data-metric-id="' + metricId + '"]');
+        if (!element) {
+            return;
+        }
+        
+        const valueElement = element.querySelector('.metric-value');
+        const targetElement = element.querySelector('.metric-target');
+        
+        if (valueElement) {
+            const value = data[metricId];
+            
+            // Extract value if it's an object (remove trend info)
+            let displayValue = value;
+            if (typeof value === 'object' && value !== null) {
+                if (value.value !== undefined) {
+                    displayValue = value.value;
+                } else if (typeof value === 'string') {
+                    displayValue = value;
+                }
+            }
+            
+            // Hide expenses metric if value is zero
+            if (metricId === 'expenses') {
+                const numValue = typeof displayValue === 'string' 
+                    ? parseFloat(displayValue.replace(/[^0-9.-]/g, '')) 
+                    : Number(displayValue);
+                if (numValue === 0 || isNaN(numValue)) {
+                    element.style.display = 'none';
+                    return;
+                } else {
+                    element.style.display = '';
+                }
+            }
+            
+            valueElement.innerHTML = formatMetricValue(metricId, displayValue);
+            
+            // Check for source target and update UI
+            let targetInfo = targetsForTimeRange[metricId];
+            if (!targetInfo) {
+                const baseMetricId = metricId.replace(/_(quickbooks|aplos)$/, '');
+                targetInfo = targetsForTimeRange[baseMetricId];
+            }
+            
+            if (targetInfo && targetElement && targetInfo.target != null && targetInfo.target !== undefined) {
+                const targetValue = targetInfo.target;
+                const isMatch = targetInfo.match;
+                const percentDiff = targetInfo.percent_difference || 0;
+                
+                targetElement.style.display = 'block';
+                const textColor = isMatch ? '#065f46' : '#ffffff';
+                const labelColor = isMatch ? '#047857' : '#ffffff';
+                targetElement.style.cssText = `display: block; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid ${isMatch ? '#e5e7eb' : 'rgba(255,255,255,0.3)'}; font-size: 0.875rem; line-height: 1.5; color: ${textColor}; font-weight: ${isMatch ? '500' : '600'};`;
+                
+                let varianceInfo = '';
+                if (percentDiff !== null && percentDiff !== undefined && !isNaN(percentDiff)) {
+                    let varianceText;
+                    if (percentDiff < 0.1) {
+                        varianceText = `${percentDiff.toFixed(2)}% variance`;
+                    } else if (percentDiff < 1) {
+                        varianceText = `${percentDiff.toFixed(1)}% variance`;
+                    } else if (percentDiff < 10) {
+                        varianceText = `${percentDiff.toFixed(1)}% variance`;
+                    } else {
+                        varianceText = `${percentDiff.toFixed(0)}% variance`;
+                    }
+                    varianceInfo = `<span style="color: ${labelColor}; opacity: 0.8; font-size: 0.8rem; margin-left: 0.5rem;">(${varianceText})</span>`;
+                }
+                
+                targetElement.innerHTML = `
+                    <span class="metric-match-indicator" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 0.5rem; vertical-align: middle; background-color: ${isMatch ? '#10b981' : '#ffffff'};"></span>
+                    <span style="color: ${labelColor};">Target: </span>
+                    <span class="metric-target-value" style="font-weight: 700; color: ${textColor};">${formatMetricValue(metricId, targetValue)}</span>
+                    ${varianceInfo}
+                `;
+                
+                element.classList.remove('metric-match', 'metric-mismatch');
+                if (isMatch) {
+                    element.classList.add('metric-match');
+                    element.style.borderLeftColor = '';
+                    element.style.borderLeftWidth = '';
+                    element.style.backgroundColor = '';
+                } else {
+                    element.classList.add('metric-mismatch');
+                    element.style.borderLeftColor = '#f59e0b';
+                    element.style.borderLeftWidth = '6px';
+                    element.style.backgroundColor = '#fffbeb';
+                }
+            } else if (targetElement) {
+                targetElement.style.display = 'none';
+                element.classList.remove('metric-match', 'metric-mismatch');
+                element.style.borderLeftColor = '';
+                element.style.borderLeftWidth = '';
+                element.style.backgroundColor = '';
+            }
+        }
+        
+        const timeBadge = element.querySelector('.metric-time-badge');
+        if (timeBadge) {
+            timeBadge.remove();
+        }
+    });
+}
+
+function updateRevenueBySource(data) {
+    if (!data || !data.sources) return;
+    const sectionContainer = document.getElementById('revenue-by-source-section-container');
+    if (sectionContainer) sectionContainer.style.display = 'block';
+    const sourcesList = document.getElementById('revenue-sources-list');
+    if (!sourcesList) return;
+    sourcesList.innerHTML = '';
+    const sources = Object.entries(data.sources).sort((a, b) => b[1].total - a[1].total);
+    sources.forEach(([sourceName, sourceData]) => {
+        const sourceCard = document.createElement('div');
+        sourceCard.className = 'board-analysis-card';
+        let breakdownHTML = '';
+        if (sourceData.breakdown) {
+            breakdownHTML = '<div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e7eb;"><div style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.75rem; font-weight: 600;">Breakdown:</div>';
+            const breakdownEntries = Object.entries(sourceData.breakdown).sort((a, b) => b[1].total - a[1].total);
+            breakdownEntries.forEach(([breakdownName, breakdownData]) => {
+                breakdownHTML += `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding: 0.75rem; background: #f9fafb; border-radius: 6px;"><div style="display: flex; align-items: center; gap: 0.5rem;"><span style="font-size: 0.9rem; color: #1f2937; font-weight: 500;">${escapeHtml(breakdownName)}</span><span style="font-size: 0.8rem; color: #6b7280;">(${breakdownData.count || 0} transactions)</span></div><div style="text-align: right;"><div style="font-weight: 600; color: #1f2937; font-size: 0.95rem;">$${parseFloat(breakdownData.total || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div><div style="font-size: 0.75rem; color: #6b7280;">${breakdownData.percentage ? breakdownData.percentage.toFixed(1) : '0.0'}% of ${escapeHtml(sourceName)}</div></div></div>`;
+            });
+            breakdownHTML += '</div>';
+        }
+        sourceCard.innerHTML = `<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;"><h4 style="margin: 0; font-size: 1.1em; color: #1f2937; font-weight: 600;">${escapeHtml(sourceName)}</h4><span style="font-weight: 700; color: #1a472a; font-size: 1.5em;">$${parseFloat(sourceData.total || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div><div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: #6b7280; margin-bottom: 0.75rem;"><span>${sourceData.count.toLocaleString()} transactions</span><span style="font-weight: 600;">${sourceData.percentage.toFixed(1)}% of total</span></div><div style="height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden;"><div style="height: 100%; background: #1a472a; width: ${sourceData.percentage}%; transition: width 0.3s ease;"></div></div>${breakdownHTML}`;
+        sourcesList.appendChild(sourceCard);
+    });
+}
+
+function updateExpensesByType(data) {
+    if (!data || !data.sources) return;
+    const sectionContainer = document.getElementById('expenses-by-type-section-container');
+    if (sectionContainer) sectionContainer.style.display = 'block';
+    const expensesList = document.getElementById('expenses-by-type-list');
+    if (!expensesList) return;
+    expensesList.innerHTML = '';
+    const expenseTypes = Object.entries(data.sources).sort((a, b) => Math.abs(b[1].total) - Math.abs(a[1].total));
+    expenseTypes.forEach(([typeName, typeData]) => {
+        const expenseCard = document.createElement('div');
+        expenseCard.className = 'board-analysis-card expense-card';
+        const isNegative = typeData.total < 0;
+        const color = isNegative ? '#10b981' : '#dc2626';
+        if (isNegative) expenseCard.style.borderLeftColor = '#10b981';
+        expenseCard.innerHTML = `<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;"><h4 style="margin: 0; font-size: 1.1em; color: #1f2937; font-weight: 600;">${escapeHtml(typeName)}</h4><span style="font-weight: 700; color: ${color}; font-size: 1.5em;">${isNegative ? '-' : ''}$${Math.abs(parseFloat(typeData.total || 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div><div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: #6b7280; margin-bottom: 0.75rem;"><span>${typeData.count.toLocaleString()} transactions</span><span style="font-weight: 600;">${Math.abs(typeData.percentage).toFixed(1)}% of total</span></div><div style="height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden;"><div style="height: 100%; background: ${color}; width: ${Math.abs(typeData.percentage)}%; transition: width 0.3s ease;"></div></div>`;
+        expensesList.appendChild(expenseCard);
+    });
+}
+
+function updatePrograms(data) {
+    const sectionContainer = document.getElementById('programs-section-container');
+    if (sectionContainer) sectionContainer.style.display = 'block';
+    if (!data) {
+        const tbody = document.getElementById('programs-tbody');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No program data available</td></tr>';
+        return;
+    }
+    const tbody = document.getElementById('programs-tbody');
+    const coverageEl = document.getElementById('programs-coverage');
+    if (!tbody) return;
+    if (coverageEl && data.coverage) coverageEl.textContent = data.coverage;
+    tbody.innerHTML = '';
+    const programs = data.programs ? Object.entries(data.programs) : [];
+    if (programs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No programs found. Programs are created in QuickBooks as Classes.</td></tr>';
+        return;
+    }
+    const programsWithData = programs.filter(([name, data]) => (data.revenue || 0) > 0 || (data.expenses || 0) > 0);
+    const programsToShow = programsWithData.length > 0 ? programs : programs.slice(0, 20);
+    if (programsToShow.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No programs found. Programs are created in QuickBooks as Classes.</td></tr>';
+        return;
+    }
+    programsToShow.forEach(([programName, programData], index) => {
+        const row = document.createElement('tr');
+        row.style.cssText = `border-bottom: 1px solid var(--border-color);`;
+        if (index % 2 === 0) row.style.backgroundColor = 'var(--bg-secondary)';
+        const netIncome = programData.net_income || 0;
+        const profitMargin = programData.profit_margin || 0;
+        const netColor = netIncome >= 0 ? '#10b981' : '#dc2626';
+        const marginColor = profitMargin >= 0 ? '#10b981' : '#dc2626';
+        const revenue = parseFloat(programData.revenue || 0);
+        const expenses = parseFloat(programData.expenses || 0);
+        const hasData = revenue > 0 || expenses > 0;
+        const revenueColor = hasData ? 'var(--text-primary)' : '#9ca3af';
+        const expensesColor = hasData ? 'var(--text-primary)' : '#9ca3af';
+        row.innerHTML = `<td style="padding: 0.75rem; font-weight: 500; color: ${hasData ? 'var(--text-primary)' : '#9ca3af'};">${escapeHtml(programName)}</td><td style="padding: 0.75rem; text-align: right; color: ${revenueColor};">$${revenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td><td style="padding: 0.75rem; text-align: right; color: ${expensesColor};">$${expenses.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td><td style="padding: 0.75rem; text-align: right; font-weight: 600; color: ${netColor};">$${parseFloat(netIncome).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td><td style="padding: 0.75rem; text-align: right; font-weight: 600; color: ${marginColor};">${profitMargin.toFixed(1)}%</td>`;
+        tbody.appendChild(row);
+    });
+}
+
+function updateTopDonors(data) {
+    const sectionContainer = document.getElementById('top-donors-section-container');
+    if (sectionContainer) sectionContainer.style.display = 'block';
+    if (!data || !data.donors) {
+        const tbody = document.getElementById('top-donors-tbody');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No donor data available</td></tr>';
+        return;
+    }
+    const tbody = document.getElementById('top-donors-tbody');
+    const coverageEl = document.getElementById('donor-coverage');
+    const coverageDetailsEl = document.getElementById('donor-coverage-details');
+    if (!tbody) return;
+    if (coverageEl && data.coverage) coverageEl.textContent = data.coverage;
+    if (coverageDetailsEl && data.coverage_details) {
+        const details = data.coverage_details;
+        coverageDetailsEl.textContent = `${details.donations_with_contact.toLocaleString()} of ${details.total_donations.toLocaleString()} donations`;
+    }
+    tbody.innerHTML = '';
+    if (data.donors.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No donor data available</td></tr>';
+        return;
+    }
+    data.donors.forEach((donor, index) => {
+        const row = document.createElement('tr');
+        row.style.cssText = `border-bottom: 1px solid var(--border-color);`;
+        if (index % 2 === 0) row.style.backgroundColor = 'var(--bg-secondary)';
+        const lastDonation = donor.last_donation ? new Date(donor.last_donation).toLocaleDateString() : '—';
+        const donorName = donor.name && donor.name.trim() ? escapeHtml(donor.name) : `Anonymous ${index + 1}`;
+        row.innerHTML = `<td style="padding: 0.75rem; font-weight: 500; color: var(--text-primary);">${donorName}</td><td style="padding: 0.75rem; text-align: right; font-weight: 600; color: #1a472a;">$${parseFloat(donor.total_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td><td style="padding: 0.75rem; text-align: center; color: var(--text-primary);">${donor.donation_count || 0}</td><td style="padding: 0.75rem; text-align: right; color: var(--text-secondary);">$${parseFloat(donor.avg_donation || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td><td style="padding: 0.75rem; text-align: center; color: var(--text-secondary); font-size: 0.9rem;">${lastDonation}</td>`;
+        tbody.appendChild(row);
+    });
+}
+
+function updateFunds(data) {
+    const sectionContainer = document.getElementById('funds-section-container');
+    if (sectionContainer) {
+        sectionContainer.style.display = 'block';
+    } else {
+        return;
+    }
+    if (!data) {
+        const tbody = document.getElementById('funds-tbody');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No fund data available</td></tr>';
+        return;
+    }
+    const tbody = document.getElementById('funds-tbody');
+    if (!tbody) return;
+    const coverageEl = document.getElementById('funds-coverage');
+    const coverageDetailsEl = document.getElementById('funds-coverage-details');
+    if (coverageEl) {
+        if (data.coverage && data.coverage.includes('fund_id not populated')) {
+            coverageEl.textContent = 'No Data';
+        } else {
+            coverageEl.textContent = data.coverage || 'Partial';
+        }
+    }
+    if (coverageDetailsEl && data.coverage) coverageDetailsEl.textContent = data.coverage;
+    tbody.innerHTML = '';
+    const funds = data.funds ? Object.entries(data.funds) : [];
+    if (funds.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No funds found. Funds are created in Aplos.</td></tr>';
+        return;
+    }
+    funds.forEach(([fundName, fundData], index) => {
+        const row = document.createElement('tr');
+        row.style.cssText = `border-bottom: 1px solid var(--border-color);`;
+        if (index % 2 === 0) row.style.backgroundColor = 'var(--bg-secondary)';
+        const netIncome = fundData.net_income || 0;
+        const profitMargin = fundData.profit_margin || 0;
+        const netColor = netIncome >= 0 ? '#10b981' : '#dc2626';
+        const marginColor = profitMargin >= 0 ? '#10b981' : '#dc2626';
+        const revenue = parseFloat(fundData.revenue || 0);
+        const expenses = parseFloat(fundData.expenses || 0);
+        const hasData = revenue > 0 || expenses > 0;
+        const fundType = fundData.fund_type || 'Unrestricted';
+        let typeColor = '#6b7280';
+        if (fundType.includes('Restricted')) typeColor = '#f59e0b';
+        else if (fundType.includes('Unrestricted')) typeColor = '#10b981';
+        const noDataMessage = !hasData ? ' (fund exists but cannot be linked to donations/transactions)' : '';
+        row.innerHTML = `<td style="padding: 0.75rem; font-weight: 500; color: ${hasData ? 'var(--text-primary)' : '#9ca3af'};">${escapeHtml(fundName)}${noDataMessage ? `<span style="font-size: 0.75rem; font-weight: normal; color: #6b7280; display: block; margin-top: 0.25rem;">${noDataMessage}</span>` : ''}</td><td style="padding: 0.75rem; color: ${typeColor}; font-size: 0.9rem;">${escapeHtml(fundType)}</td><td style="padding: 0.75rem; text-align: right; color: ${hasData ? 'var(--text-primary)' : '#9ca3af'};">$${revenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td><td style="padding: 0.75rem; text-align: right; color: ${hasData ? 'var(--text-primary)' : '#9ca3af'};">$${expenses.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td><td style="padding: 0.75rem; text-align: right; font-weight: 600; color: ${netColor};">$${parseFloat(netIncome).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td><td style="padding: 0.75rem; text-align: right; font-weight: 600; color: ${marginColor};">${profitMargin.toFixed(1)}%</td>`;
+        tbody.appendChild(row);
+    });
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Initializing app for tenant:', TENANT_ID);
