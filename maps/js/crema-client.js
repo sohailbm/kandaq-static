@@ -228,7 +228,17 @@ class CremaClient {
             // Remove trailing slash and filename, keep directory
             // For /maps/, this becomes /maps
             // For /maps/index.html, this also becomes /maps
+            // For /kandaq-static/maps/, we need to extract just /maps
             let basePath = currentPath.replace(/\/[^/]*$/, '');
+            // If path includes GitHub Pages base (e.g., /kandaq-static/maps), extract just the subdirectory
+            // Look for /maps or /app pattern and use that as base
+            const mapsMatch = basePath.match(/(\/maps)(?:\/|$)/);
+            const appMatch = basePath.match(/(\/tenants\/[^/]+\/app)(?:\/|$)/);
+            if (mapsMatch) {
+                basePath = mapsMatch[1];
+            } else if (appMatch) {
+                basePath = appMatch[1];
+            }
             // Ensure basePath doesn't end with double slash
             basePath = basePath.replace(/\/+$/, '') || '/';
             // Construct cache file path

@@ -6076,24 +6076,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     try {
-        // Check tenant readiness before loading data (non-blocking - allow app to load even if check fails)
-        // Pass app_id if available (for future app-specific validation)
-        const appId = typeof APP_ID !== 'undefined' ? APP_ID : null;
-        checkTenantReadiness(appId).catch(err => {
-            console.warn('⚠️ Readiness check failed, but continuing app initialization:', err.message);
-            // Show warning but don't block app initialization
-            const warningDiv = document.createElement('div');
-            warningDiv.id = 'readiness-warning';
-            warningDiv.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; background: #f59e0b; color: white; padding: 12px; text-align: center; z-index: 9999; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-size: 0.875rem;';
-            warningDiv.innerHTML = '<strong>⚠️ Some services may be slow</strong> - App is loading but some features may be unavailable.';
-            document.body.insertBefore(warningDiv, document.body.firstChild);
-            // Auto-dismiss after 10 seconds
-            setTimeout(() => {
-                if (warningDiv.parentNode) {
-                    warningDiv.parentNode.removeChild(warningDiv);
-                }
-            }, 10000);
-        });
+        // Cache mode only: Skip readiness check (no API access)
+        // Readiness check is only needed for realtime/API mode
+        if (CREMA_MODE !== 'cache') {
+            // Check tenant readiness before loading data (non-blocking - allow app to load even if check fails)
+            // Pass app_id if available (for future app-specific validation)
+            const appId = typeof APP_ID !== 'undefined' ? APP_ID : null;
+            checkTenantReadiness(appId).catch(err => {
+                console.warn('⚠️ Readiness check failed, but continuing app initialization:', err.message);
+                // Show warning but don't block app initialization
+                const warningDiv = document.createElement('div');
+                warningDiv.id = 'readiness-warning';
+                warningDiv.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; background: #f59e0b; color: white; padding: 12px; text-align: center; z-index: 9999; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-size: 0.875rem;';
+                warningDiv.innerHTML = '<strong>⚠️ Some services may be slow</strong> - App is loading but some features may be unavailable.';
+                document.body.insertBefore(warningDiv, document.body.firstChild);
+                // Auto-dismiss after 10 seconds
+                setTimeout(() => {
+                    if (warningDiv.parentNode) {
+                        warningDiv.parentNode.removeChild(warningDiv);
+                    }
+                }, 10000);
+            });
+        } else {
+            console.log('ℹ️ Cache mode: Skipping readiness check (no API access)');
+        }
         
         // Get initial time range
         const timeRangeSelect = document.getElementById('time-range-select');
