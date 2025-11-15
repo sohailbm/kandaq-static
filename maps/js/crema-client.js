@@ -96,15 +96,31 @@ class CremaClient {
         }
         
         // Load from consolidated dashboard_data.json (contains Crema data)
-        // Construct absolute path to ensure correct resolution
+        // Use same path resolution as _loadCacheFile
         let cacheFile;
         if (this.cacheDir.startsWith('/')) {
             // Already absolute path
             cacheFile = `${this.cacheDir}/dashboard_data.json`;
         } else if (typeof window !== 'undefined') {
-            // Construct absolute path from current page location
-            const basePath = window.location.pathname.split('/app')[0] + '/app';
+            // Use relative path from current page location
+            // Works for both /tenants/maps/app/ and /maps/ deployments
+            const currentPath = window.location.pathname;
+            // Remove trailing slash and filename, keep directory
+            let basePath = currentPath.replace(/\/[^/]*$/, '');
+            // If path includes GitHub Pages base (e.g., /kandaq-static/maps), extract just the subdirectory
+            const mapsMatch = basePath.match(/(\/maps)(?:\/|$)/);
+            const appMatch = basePath.match(/(\/tenants\/[^/]+\/app)(?:\/|$)/);
+            if (mapsMatch) {
+                basePath = mapsMatch[1];
+            } else if (appMatch) {
+                basePath = appMatch[1];
+            }
+            // Ensure basePath doesn't end with double slash
+            basePath = basePath.replace(/\/+$/, '') || '/';
+            // Construct cache file path
             cacheFile = `${basePath}/${this.cacheDir}/dashboard_data.json`;
+            // Clean up any double slashes
+            cacheFile = cacheFile.replace(/\/+/g, '/');
         } else {
             // Fallback to relative path
             cacheFile = `${this.cacheDir}/dashboard_data.json`;
