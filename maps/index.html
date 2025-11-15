@@ -3268,55 +3268,9 @@ function showResultsModal(title, results) {
 
 // Function to open file in OS default viewer/player
 function openFile(fileId, filePath, mimeType) {
-    if (!fileId || fileId === '') {
-        console.error('File ID not available. File data:', { fileId, filePath, mimeType });
-        alert('File ID not available. Cannot open file without proper identifier.\n\nFile Path: ' + (filePath || 'N/A'));
-        return;
-    }
-    
-    // Construct file URL using Kandaq API content endpoint (not Sanduq directly)
     // Static mode: File content requires API access
     console.warn('⚠️ File content not available in static mode');
-    return null;
-    
-    // Create a temporary anchor element to trigger download/open
-    const link = document.createElement('a');
-    link.href = fileUrl;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    
-    // For opening in OS default player, we'll use a simple link which should trigger the browser's default behavior
-    // The browser will handle the file based on MIME type
-    
-    // Try to open via fetch first, then open in new tab (headers not needed - tenant ID in URL)
-    fetch(fileUrl, {
-        method: 'GET'
-    }).then(response => {
-        if (response.ok) {
-            // Get blob URL
-            return response.blob();
-        } else {
-            throw new Error('Failed to fetch file');
-        }
-    }).then(blob => {
-        // Create object URL from blob
-        const blobUrl = URL.createObjectURL(blob);
-        
-        // Create link to blob URL
-        const blobLink = document.createElement('a');
-        blobLink.href = blobUrl;
-        blobLink.download = filePath.split('/').pop() || 'file';
-        blobLink.target = '_blank';
-        blobLink.rel = 'noopener noreferrer';
-        
-        // Trigger click to open/download
-        document.body.appendChild(blobLink);
-        blobLink.click();
-        document.body.removeChild(blobLink);
-        
-        // Clean up blob URL after a delay
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
-    });
+    alert('File viewing is not available in static mode. This feature requires API access.');
 }
 
 function closeResultsModal() {
