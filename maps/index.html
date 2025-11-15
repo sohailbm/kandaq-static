@@ -682,16 +682,7 @@ body {
     color: #1f2937;
 }
 
-/* Insights and Recommendations */
-.insights-section, .recommendations-section {
-    display: none;
-    margin-bottom: calc(16px * 2);
-    padding: 24px;
-    background: linear-gradient(to bottom, #f9fafb, white);
-    border-radius: 12px;
-}
-
-.insights-section h2, .recommendations-section h2 {
+/* Removed insights and recommendations sections for static deployment */
     font-size: 2.2em;
     margin-bottom: 32px;
     color: #1f2937;
@@ -1909,11 +1900,7 @@ function showError(message, section = 'general') {
     
     // Insert into appropriate section
     let sectionEl = null;
-    if (section === 'insights') {
-        sectionEl = document.querySelector('.insights-section') || document.querySelector('.insights-grid');
-    } else if (section === 'recommendations') {
-        sectionEl = document.querySelector('.recommendations-section') || document.querySelector('.recommendations-grid');
-    } else if (section === 'metrics') {
+    if (section === 'metrics') {
         sectionEl = document.querySelector('.metrics-section') || document.querySelector('.metrics-grid');
     } else {
         sectionEl = document.querySelector('.dashboard-main');
@@ -2160,11 +2147,6 @@ async function loadCremaEntityQualityInsights(entityType, entityName) {
     
     // Static mode: Entity quality insights not available
     return;
-    
-    g;
-        descriptionHtml = descriptionHtml.replace(boldRegex, '<strong>$1</strong>');
-        
-        let html = `
             <div class="rec-header">
                 <h4 class="rec-title">${escapeHtml(title)}</h4>
                 <span class="rec-priority priority-${priority}">${priority}</span>
