@@ -684,11 +684,7 @@ body {
 
 /* Removed insights and recommendations sections for static deployment */
 
-.recommendations-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 24px;
-}
+/* Removed recommendations-grid for static deployment */
 
 .insight-panel, .recommendation-box {
     background: white;
@@ -1890,6 +1886,12 @@ function showError(message, section = 'general') {
         sectionEl = document.querySelector('.metrics-section') || document.querySelector('.metrics-grid');
     } else {
         sectionEl = document.querySelector('.dashboard-main');
+    }
+    
+    // If section not found, don't try to insert (prevents errors)
+    if (!sectionEl) {
+        console.warn(`Section not found for error: ${section}`);
+        return;
     }
     
     if (sectionEl) {
