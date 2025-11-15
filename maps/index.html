@@ -4704,12 +4704,16 @@ function updateRecommendations(recommendations) {
         box.setAttribute('data-rec-id', recId);
         box.setAttribute('data-priority', priority);
         
+        // Convert markdown bold to HTML in description
+        let descriptionHtml = escapeHtml(description);
+        descriptionHtml = descriptionHtml.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        
         let html = `
             <div class="rec-header">
                 <h4 class="rec-title">${escapeHtml(title)}</h4>
                 <span class="rec-priority priority-${priority}">${priority}</span>
             </div>
-            <div class="rec-description">${escapeHtml(description)}</div>
+            <div class="rec-description">${descriptionHtml}</div>
         `;
         
         // Add target KPI if available
