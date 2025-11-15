@@ -1358,9 +1358,8 @@ async function loadTileInsights(entityType, entityName, businessFields, totalCou
     const insightsEl = tileEl.querySelector('.tile-insights-content');
     if (!insightsEl) return;
     
-    // Static mode: Entity insights not available (requires API)
-    console.warn('⚠️ Entity insights not available in static mode');
-    insightsEl.innerHTML = '<div style="text-align: center; padding: 1rem; color: #9ca3af; font-size: 0.875rem;">Entity insights require API access</div>';
+    // Static mode: Entity insights not available
+    return;
 }
 
 // Business entity analysis helper (defined globally)
@@ -1501,8 +1500,8 @@ window.quickAnalyze = function(records, fieldArray) {
 
 // Add click handler for entity data
 window.showEntityData = async function(entityType, entityName) {
-    // Static mode: Entity search requires API access
-    showEntityDataModal(entityName, [], false, 'Entity search is not available in static mode. This feature requires API access.');
+    // Static mode: Entity search not available
+    return;
 };
 
 // Format field value for better readability (HTML version - different from plain text version below)
@@ -2177,9 +2176,7 @@ async function loadCremaEntityQualityInsights(entityType, entityName) {
     const insightsEl = tileEl.querySelector('.tile-insights-content');
     if (!insightsEl) return;
     
-    // Static mode: Entity quality insights require API access
-    console.warn('⚠️ Entity quality insights not available in static mode');
-    insightsEl.innerHTML = '<div style="text-align: center; padding: 1rem; color: #9ca3af; font-size: 0.875rem;">Quality insights require API access</div>';
+    // Static mode: Entity quality insights not available
     return;
     
     g;
@@ -3268,9 +3265,8 @@ function showResultsModal(title, results) {
 
 // Function to open file in OS default viewer/player
 function openFile(fileId, filePath, mimeType) {
-    // Static mode: File content requires API access
-    console.warn('⚠️ File content not available in static mode');
-    alert('File viewing is not available in static mode. This feature requires API access.');
+    // Static mode: File content not available
+    return;
 }
 
 function closeResultsModal() {
@@ -3316,8 +3312,6 @@ document.addEventListener('click', async (e) => {
 
 // Global search function - static mode (not available)
 async function searchGlobal(query) {
-    // Static mode: Search requires API access
-    console.warn('⚠️ Global search not available in static mode');
     return [];
 }
 
