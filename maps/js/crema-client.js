@@ -218,14 +218,17 @@ class CremaClient {
      */
     async _loadCacheFile(timeRange) {
         // Load from consolidated dashboard_data.json (single file with all time ranges)
-        // Construct absolute path to ensure correct resolution
+        // Construct path relative to current page location (works for both /app and /maps)
         let cacheFile;
         if (this.cacheDir.startsWith('/')) {
             // Already absolute path
             cacheFile = `${this.cacheDir}/dashboard_data.json`;
         } else if (typeof window !== 'undefined') {
-            // Construct absolute path from current page location
-            const basePath = window.location.pathname.split('/app')[0] + '/app';
+            // Use relative path from current page location
+            // Works for both /tenants/maps/app/ and /maps/ deployments
+            const currentPath = window.location.pathname;
+            // Remove trailing slash and filename, keep directory
+            const basePath = currentPath.replace(/\/[^/]*$/, '');
             cacheFile = `${basePath}/${this.cacheDir}/dashboard_data.json`;
         } else {
             // Fallback to relative path
