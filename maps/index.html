@@ -683,11 +683,6 @@ body {
 }
 
 /* Removed insights and recommendations sections for static deployment */
-    font-size: 2.2em;
-    margin-bottom: 32px;
-    color: #1f2937;
-    font-weight: 700;
-    display: flex;
     align-items: center;
     gap: 12px;
 }
@@ -2147,11 +2142,7 @@ async function loadCremaEntityQualityInsights(entityType, entityName) {
     
     // Static mode: Entity quality insights not available
     return;
-            <div class="rec-header">
-                <h4 class="rec-title">${escapeHtml(title)}</h4>
-                <span class="rec-priority priority-${priority}">${priority}</span>
-            </div>
-            <div class="rec-description">${descriptionHtml}</div>
+}
         `;
         
         // Add target KPI if available
