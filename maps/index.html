@@ -683,11 +683,6 @@ body {
 }
 
 /* Removed insights and recommendations sections for static deployment */
-    align-items: center;
-    gap: 12px;
-}
-
-.insights-grid {
     display: grid;
     grid-template-columns: 1fr;
     gap: 24px;
@@ -2142,43 +2137,6 @@ async function loadCremaEntityQualityInsights(entityType, entityName) {
     
     // Static mode: Entity quality insights not available
     return;
-}
-        `;
-        
-        // Add target KPI if available
-        if (targetKpi) {
-            html += `<div class="rec-target-kpi"><span class="kpi-label">Target KPI:</span> <span class="kpi-value">${escapeHtml(targetKpi.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()))}</span></div>`;
-        }
-        
-        // Add expected impact if available
-        if (expectedImpact && (expectedImpact.kpi_change_percent || expectedImpact.estimated_value)) {
-            html += `<div class="rec-impact">`;
-            if (expectedImpact.kpi_change_percent) {
-                html += `<span class="impact-badge">${escapeHtml(expectedImpact.kpi_change_percent)}</span>`;
-            }
-            if (expectedImpact.estimated_value) {
-                html += `<span class="impact-value">${escapeHtml(expectedImpact.estimated_value)}</span>`;
-            }
-            html += `</div>`;
-        }
-        
-        // Add implementation time if available
-        if (implementationTime) {
-            html += `<div class="rec-timeline"><span class="timeline-icon">⏱</span> ${escapeHtml(implementationTime)}</div>`;
-        }
-        
-        // Add action items if available
-        if (actionItems && actionItems.length > 0) {
-            html += `<div class="rec-actions"><ul>`;
-            actionItems.forEach(action => {
-                html += `<li>${escapeHtml(action)}</li>`;
-            });
-            html += `</ul></div>`;
-        }
-        
-        box.innerHTML = html;
-        recommendationsGrid.appendChild(box);
-    });
 }
 
 // Entity schema definitions - built dynamically from Crema data
