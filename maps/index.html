@@ -1387,6 +1387,11 @@ async function loadTileInsights(entityType, entityName, businessFields, totalCou
     const insightsEl = tileEl.querySelector('.tile-insights-content');
     if (!insightsEl) return;
     
+    // Cache mode only: Entity insights require API access
+    console.warn('⚠️ Entity insights not available in cache-only mode');
+    return;
+    
+    /* DISABLED: API calls not available in cache-only mode
     try {
         // Fetch sample data for analysis (10 records for quick insights - reduced for performance)
         const response = await fetch(API_URL + '/api/search', {
@@ -1583,6 +1588,11 @@ window.quickAnalyze = function(records, fieldArray) {
 
 // Add click handler for entity data
 window.showEntityData = async function(entityType, entityName) {
+        // Cache mode only: Entity search requires API access
+        showEntityDataModal(entityName, [], false, 'Entity search is not available in static mode. This feature requires API access.');
+        return;
+        
+        /* DISABLED: API calls not available in cache-only mode
         try {
             console.log('🔍 Opening entity data modal for:', entityType, entityName);
             // Show loading modal
@@ -2349,6 +2359,11 @@ async function loadCremaEntityQualityInsights(entityType, entityName) {
     const insightsEl = tileEl.querySelector('.tile-insights-content');
     if (!insightsEl) return;
     
+    // Cache mode only: Entity quality insights require API access
+    console.warn('⚠️ Entity quality insights not available in cache-only mode');
+    return;
+    
+    /* DISABLED: API calls not available in cache-only mode
     try {
         // Fetch sample of records for data quality analysis (optimized for performance)
         // Using 20 records is sufficient for accurate quality metrics and much faster
@@ -2755,6 +2770,11 @@ function updateEntityCounts(entityTypes) {
 
 // Search entities - passthrough of entity types from Crema (no transformation)
 async function searchEntity(entityType, searchTerm = '') {
+    // Cache mode only: Entity search requires API access
+    console.warn('⚠️ Entity search not available in cache-only mode');
+    return [];
+    
+    /* DISABLED: API calls not available in cache-only mode
     // Pass entity type from Crema directly to query endpoint (no embellishment/transformation)
     // Use entity.data_type (or fallback to key) exactly as received from Crema
     const entity_key = entityType.data_type || entityType.key;
@@ -2804,6 +2824,11 @@ async function searchEntity(entityType, searchTerm = '') {
 // Browse category files - query by ai_category values or metadata fields
 // Uses Crema data for business categories and file categories
 async function browseCategory(category) {
+    // Cache mode only: Category browsing requires API access
+    console.warn('⚠️ Category browsing not available in cache-only mode');
+    return [];
+    
+    /* DISABLED: API calls not available in cache-only mode
     const categoryKey = category.toLowerCase();
     
     // Check if this is a business category (from Crema businessCategories)
@@ -3206,6 +3231,12 @@ async function fetchInsights(timeRange = 'this_year') {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.INSIGHTS_TIMEOUT);
         
+        // Cache mode only: Insights require API access
+        showError('Insights are not available in static mode. This feature requires API access.', 'insights');
+        hideLoading('insights');
+        return;
+        
+        /* DISABLED: API calls not available in cache-only mode
         try {
             const response = await fetch(API_URL + '/api/insights?time_range=' + kandaqTimeRange, {
                 signal: controller.signal,
@@ -3324,6 +3355,12 @@ async function fetchRecommendations(timeRange = 'month') {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.RECOMMENDATIONS_TIMEOUT);
         
+        // Cache mode only: Recommendations require API access
+        showError('Recommendations are not available in static mode. This feature requires API access.', 'recommendations');
+        hideLoading('recommendations');
+        return;
+        
+        /* DISABLED: API calls not available in cache-only mode
         try {
             const response = await fetch(API_URL + '/api/recommendations?time_range=' + kandaqTimeRange, {
                 signal: controller.signal,
