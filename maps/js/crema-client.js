@@ -228,8 +228,15 @@ class CremaClient {
             // Works for both /tenants/maps/app/ and /maps/ deployments
             const currentPath = window.location.pathname;
             // Remove trailing slash and filename, keep directory
-            const basePath = currentPath.replace(/\/[^/]*$/, '');
+            // For /maps/, this becomes /maps
+            // For /maps/index.html, this also becomes /maps
+            let basePath = currentPath.replace(/\/[^/]*$/, '');
+            // Ensure basePath doesn't end with double slash
+            basePath = basePath.replace(/\/+$/, '') || '/';
+            // Construct cache file path
             cacheFile = `${basePath}/${this.cacheDir}/dashboard_data.json`;
+            // Clean up any double slashes
+            cacheFile = cacheFile.replace(/\/+/g, '/');
         } else {
             // Fallback to relative path
             cacheFile = `${this.cacheDir}/dashboard_data.json`;
