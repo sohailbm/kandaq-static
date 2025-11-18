@@ -131,8 +131,201 @@ async function decryptSensitiveFields(data, password) {
 }
 
 /**
+ * Show password dialog modal
+ * @returns {Promise<string|null>} - Password entered by user, or null if cancelled
+ */
+function showPasswordDialog() {
+    return new Promise((resolve) => {
+        // Create modal overlay
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            font-family: Poppins, sans-serif;
+        `;
+        
+        // Create modal dialog
+        const dialog = document.createElement('div');
+        dialog.style.cssText = `
+            background: #FFFFFF;
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.2s ease-out;
+        `;
+        
+        // Add fade-in animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; transform: scale(0.95); }
+                to { opacity: 1; transform: scale(1); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Create title
+        const title = document.createElement('h2');
+        title.textContent = '🔐 Decryption Required';
+        title.style.cssText = `
+            margin: 0 0 16px 0;
+            color: #111827;
+            font-size: 24px;
+            font-weight: 600;
+        `;
+        
+        // Create description
+        const desc = document.createElement('p');
+        desc.textContent = 'Enter password to decrypt dashboard data:';
+        desc.style.cssText = `
+            margin: 0 0 24px 0;
+            color: #6B7280;
+            font-size: 14px;
+        `;
+        
+        // Create password input
+        const input = document.createElement('input');
+        input.type = 'password';
+        input.placeholder = 'Enter password';
+        input.autocomplete = 'current-password';
+        input.style.cssText = `
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #E5E7EB;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: Poppins, sans-serif;
+            margin-bottom: 24px;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        `;
+        input.addEventListener('focus', () => {
+            input.style.borderColor = '#A51D35';
+        });
+        input.addEventListener('blur', () => {
+            input.style.borderColor = '#E5E7EB';
+        });
+        
+        // Create button container
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.cssText = `
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        `;
+        
+        // Create cancel button
+        const cancelBtn = document.createElement('button');
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.style.cssText = `
+            padding: 10px 20px;
+            border: 2px solid #E5E7EB;
+            border-radius: 8px;
+            background: #FFFFFF;
+            color: #374151;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: Poppins, sans-serif;
+            transition: all 0.2s;
+        `;
+        cancelBtn.addEventListener('mouseenter', () => {
+            cancelBtn.style.backgroundColor = '#F9FAFB';
+            cancelBtn.style.borderColor = '#D1D5DB';
+        });
+        cancelBtn.addEventListener('mouseleave', () => {
+            cancelBtn.style.backgroundColor = '#FFFFFF';
+            cancelBtn.style.borderColor = '#E5E7EB';
+        });
+        cancelBtn.addEventListener('click', () => {
+            document.body.removeChild(overlay);
+            resolve(null);
+        });
+        
+        // Create submit button
+        const submitBtn = document.createElement('button');
+        submitBtn.textContent = 'Decrypt';
+        submitBtn.style.cssText = `
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #A51D35;
+            color: #FFFFFF;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: Poppins, sans-serif;
+            transition: all 0.2s;
+        `;
+        submitBtn.addEventListener('mouseenter', () => {
+            submitBtn.style.backgroundColor = '#8B1A2E';
+        });
+        submitBtn.addEventListener('mouseleave', () => {
+            submitBtn.style.backgroundColor = '#A51D35';
+        });
+        
+        const handleSubmit = () => {
+            const password = input.value.trim();
+            if (password) {
+                document.body.removeChild(overlay);
+                resolve(password);
+            } else {
+                input.style.borderColor = '#EF4444';
+                input.focus();
+            }
+        };
+        
+        submitBtn.addEventListener('click', handleSubmit);
+        
+        // Handle Enter key
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSubmit();
+            } else if (e.key === 'Escape') {
+                document.body.removeChild(overlay);
+                resolve(null);
+            }
+        });
+        
+        // Handle overlay click (close on outside click)
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                document.body.removeChild(overlay);
+                resolve(null);
+            }
+        });
+        
+        // Assemble dialog
+        buttonContainer.appendChild(cancelBtn);
+        buttonContainer.appendChild(submitBtn);
+        dialog.appendChild(title);
+        dialog.appendChild(desc);
+        dialog.appendChild(input);
+        dialog.appendChild(buttonContainer);
+        overlay.appendChild(dialog);
+        
+        // Add to page
+        document.body.appendChild(overlay);
+        
+        // Focus input
+        setTimeout(() => input.focus(), 100);
+    });
+}
+
+/**
  * Get decryption key from various sources
- * Priority: 1) User input, 2) API token, 3) Session storage, 4) Prompt
+ * Priority: 1) User input, 2) API token, 3) Session storage, 4) Password dialog
  */
 async function getDecryptionKey() {
     // Try to get from session storage (if user already entered password)
@@ -149,8 +342,8 @@ async function getDecryptionKey() {
         return apiToken;
     }
     
-    // Prompt user for password
-    const password = prompt('Enter password to decrypt dashboard data:');
+    // Show password dialog
+    const password = await showPasswordDialog();
     if (password) {
         // Store in session (not localStorage for security)
         sessionStorage.setItem('dashboard_decryption_key', password);
@@ -181,7 +374,8 @@ async function loadDecryptedDashboard(timeRange = 'this_year') {
                 }
             }
         }
-        const dataPath = `${basePath}/data/dashboard_${timeRange}.json`;
+        // Load consolidated dashboard_data.json (contains all time ranges)
+        const dataPath = `${basePath}/data/dashboard_data.json`;
         const response = await fetch(dataPath + `?t=${Date.now()}`, { cache: 'no-store' });
         if (!response.ok) {
             throw new Error(`Failed to load dashboard data: ${response.status}`);
@@ -190,22 +384,37 @@ async function loadDecryptedDashboard(timeRange = 'this_year') {
         const encryptedData = await response.json();
         
         // Check if data is encrypted
-        if (!encryptedData._encryption) {
+        let data = encryptedData;
+        if (encryptedData._encryption) {
+            // Get decryption key
+            const key = await getDecryptionKey();
+            if (!key) {
+                throw new Error('Decryption key required but not provided');
+            }
+            
+            // Decrypt
+            data = await decryptSensitiveFields(encryptedData, key);
+            console.log('✅ Dashboard data decrypted successfully');
+        } else {
             console.log('📦 Data is not encrypted, returning as-is');
-            return encryptedData;
         }
         
-        // Get decryption key
-        const key = await getDecryptionKey();
-        if (!key) {
-            throw new Error('Decryption key required but not provided');
+        // Extract the specific time range from the consolidated file
+        // Structure: { metrics: { this_year: {...}, this_month: {...}, ... }, crema: {...}, source_targets: {...} }
+        if (data.metrics && data.metrics[timeRange]) {
+            // Return data for the specific time range, preserving other top-level keys
+            return {
+                ...data,
+                metrics: data.metrics[timeRange],
+                // Keep source_targets and crema at top level
+                source_targets: data.source_targets || {},
+                crema: data.crema || {}
+            };
+        } else {
+            // Fallback: return the data as-is (might be old format)
+            console.warn(`⚠️ Time range '${timeRange}' not found in consolidated data, returning full data`);
+            return data;
         }
-        
-        // Decrypt
-        const decrypted = await decryptSensitiveFields(encryptedData, key);
-        console.log('✅ Dashboard data decrypted successfully');
-        
-        return decrypted;
     } catch (error) {
         console.error('❌ Failed to load/decrypt dashboard:', error);
         throw error;
@@ -221,3 +430,4 @@ if (typeof module !== 'undefined' && module.exports) {
     };
 }
 
+// Force browser cache refresh

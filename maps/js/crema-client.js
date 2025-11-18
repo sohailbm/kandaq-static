@@ -13,12 +13,12 @@ class CremaClient {
         // The _loadCacheFile method will construct the correct absolute path
         this.cacheDir = options.cacheDir || 'data';
         
-        // Explicit mode: 'cache' or 'realtime' (not a fallback)
-        // Default: 'cache' for static deployment, 'realtime' for development
-        this.mode = options.mode || (options.useCache !== false ? 'cache' : 'realtime');
+        // Explicit mode: 'cache' or 'live' (not a fallback)
+        // Default: 'cache' for static deployment, 'live' for development
+        this.mode = options.mode || (options.useCache !== false ? 'cache' : 'live');
         
-        if (this.mode !== 'cache' && this.mode !== 'realtime') {
-            throw new Error(`Invalid mode: ${this.mode}. Must be 'cache' or 'realtime'`);
+        if (this.mode !== 'cache' && this.mode !== 'live') {
+            throw new Error(`Invalid mode: ${this.mode}. Must be 'cache' or 'live'`);
         }
         
         this.cacheTTL = options.cacheTTL || 3600000; // 1 hour in ms
@@ -48,8 +48,30 @@ class CremaClient {
         // Check in-memory cache first
         if (this._cache.has(cacheKey)) {
             const cached = this._cache.get(cacheKey);
-            if (Date.now() - cached.timestamp < this.cacheTTL) {
-                return cached.data.metrics;
+            // Check cache file timestamp to see if it's newer than in-memory cache
+            try {
+                const cacheFile = await this._getCacheFilePath();
+                const response = await fetch(cacheFile + `?t=${Date.now()}`, { cache: 'no-cache', method: 'HEAD' });
+                const lastModified = response.headers.get('Last-Modified');
+                if (lastModified) {
+                    const fileTime = new Date(lastModified).getTime();
+                    const cacheTime = cached.timestamp;
+                    // If file is newer than cache, clear in-memory cache
+                    if (fileTime > cacheTime) {
+                        this._cache.delete(cacheKey);
+                        console.log('🔄 Cache file updated, clearing in-memory cache');
+                    }
+                }
+            } catch (e) {
+                // If HEAD request fails, fall through to normal cache check
+            }
+            
+            // Check TTL only if cache wasn't cleared above
+            if (this._cache.has(cacheKey)) {
+                const cached = this._cache.get(cacheKey);
+                if (Date.now() - cached.timestamp < this.cacheTTL) {
+                    return cached.data.metrics;
+                }
             }
         }
         
@@ -66,6 +88,25 @@ class CremaClient {
         });
         
         return cacheData.metrics;
+    }
+    
+    async _getCacheFilePath() {
+        if (this.cacheDir.startsWith('/')) {
+            return `${this.cacheDir}/dashboard_data.json`;
+        } else if (typeof window !== 'undefined') {
+            const currentPath = window.location.pathname;
+            const appMatch = currentPath.match(/(\/tenants\/[^/]+\/app)(?:\/|$)/);
+            let basePath;
+            if (appMatch) {
+                basePath = appMatch[1];
+            } else {
+                const tenantMatch = currentPath.match(/\/([^/]+)(?:\/|$)/);
+                basePath = tenantMatch ? `/${tenantMatch[1]}/app` : '/app';
+            }
+            return `${basePath}/${this.cacheDir}/dashboard_data.json`;
+        } else {
+            return `${this.cacheDir}/dashboard_data.json`;
+        }
     }
     
     /**
@@ -105,16 +146,26 @@ class CremaClient {
             // Use relative path from current page location
             // Works for both /tenants/maps/app/ and /maps/ deployments
             const currentPath = window.location.pathname;
-            // Remove trailing slash and filename, keep directory
-            let basePath = currentPath.replace(/\/[^/]*$/, '');
-            // If path includes GitHub Pages base (e.g., /kandaq-static/maps), extract just the subdirectory
-            const mapsMatch = basePath.match(/(\/maps)(?:\/|$)/);
-            const appMatch = basePath.match(/(\/tenants\/[^/]+\/app)(?:\/|$)/);
-            if (mapsMatch) {
-                basePath = mapsMatch[1];
-            } else if (appMatch) {
+            
+            // Check for /app pattern FIRST on the original path (before removing segments)
+            // This ensures /tenants/maps/app matches app pattern, not maps pattern
+            const appMatch = currentPath.match(/(\/tenants\/[^/]+\/app)(?:\/|$)/);
+            let basePath;
+            
+            if (appMatch) {
+                // Development: /tenants/maps/app -> /tenants/maps/app
                 basePath = appMatch[1];
+            } else {
+                // Production: /maps/ or /maps/index.html -> /maps
+                // Remove trailing slash and filename, keep directory
+                basePath = currentPath.replace(/\/[^/]*$/, '');
+                // If path includes GitHub Pages base (e.g., /kandaq-static/maps), extract just /maps
+                const mapsMatch = basePath.match(/(\/maps)(?:\/|$)/);
+                if (mapsMatch) {
+                    basePath = mapsMatch[1];
+                }
             }
+            
             // Ensure basePath doesn't end with double slash
             basePath = basePath.replace(/\/+$/, '') || '/';
             // Construct cache file path
@@ -135,8 +186,14 @@ class CremaClient {
             const allData = await response.json();
             const cremaData = allData.crema;
             
-            if (!cremaData) {
-                throw new Error('Crema data not found in cache file');
+            // Crema data is optional - return null if not available instead of throwing
+            if (!cremaData || (typeof cremaData === 'object' && Object.keys(cremaData).length === 0)) {
+                // Store null in cache to avoid repeated fetches
+                this._cache.set(cacheKey, {
+                    data: null,
+                    timestamp: Date.now()
+                });
+                return null;
             }
             
             // Store in memory cache
@@ -241,20 +298,26 @@ class CremaClient {
             // Use relative path from current page location
             // Works for both /tenants/maps/app/ and /maps/ deployments
             const currentPath = window.location.pathname;
-            // Remove trailing slash and filename, keep directory
-            // For /maps/, this becomes /maps
-            // For /maps/index.html, this also becomes /maps
-            // For /kandaq-static/maps/, we need to extract just /maps
-            let basePath = currentPath.replace(/\/[^/]*$/, '');
-            // If path includes GitHub Pages base (e.g., /kandaq-static/maps), extract just the subdirectory
-            // Look for /maps or /app pattern and use that as base
-            const mapsMatch = basePath.match(/(\/maps)(?:\/|$)/);
-            const appMatch = basePath.match(/(\/tenants\/[^/]+\/app)(?:\/|$)/);
-            if (mapsMatch) {
-                basePath = mapsMatch[1];
-            } else if (appMatch) {
+            
+            // Check for /app pattern FIRST on the original path (before removing segments)
+            // This ensures /tenants/maps/app matches app pattern, not maps pattern
+            const appMatch = currentPath.match(/(\/tenants\/[^/]+\/app)(?:\/|$)/);
+            let basePath;
+            
+            if (appMatch) {
+                // Development: /tenants/maps/app -> /tenants/maps/app
                 basePath = appMatch[1];
+            } else {
+                // Production: /maps/ or /maps/index.html -> /maps
+                // Remove trailing slash and filename, keep directory
+                basePath = currentPath.replace(/\/[^/]*$/, '');
+                // If path includes GitHub Pages base (e.g., /kandaq-static/maps), extract just /maps
+                const mapsMatch = basePath.match(/(\/maps)(?:\/|$)/);
+                if (mapsMatch) {
+                    basePath = mapsMatch[1];
+                }
             }
+            
             // Ensure basePath doesn't end with double slash
             basePath = basePath.replace(/\/+$/, '') || '/';
             // Construct cache file path
@@ -266,7 +329,11 @@ class CremaClient {
             cacheFile = `${this.cacheDir}/dashboard_data.json`;
         }
         
-        const response = await fetch(cacheFile);
+        // Add cache-busting query parameter to ensure fresh data
+        const cacheBuster = `?t=${Date.now()}`;
+        const response = await fetch(cacheFile + cacheBuster, {
+            cache: 'no-cache'
+        });
         if (!response.ok) {
             throw new Error(`Cache file not found: ${cacheFile}`);
         }
@@ -430,12 +497,12 @@ class CremaClient {
     }
     
     /**
-     * Switch mode between 'cache' and 'realtime'
-     * @param {string} mode - New mode ('cache' or 'realtime')
+     * Switch mode between 'cache' and 'live'
+     * @param {string} mode - New mode ('cache' or 'live')
      */
     setMode(mode) {
-        if (mode !== 'cache' && mode !== 'realtime') {
-            throw new Error(`Invalid mode: ${mode}. Must be 'cache' or 'realtime'`);
+        if (mode !== 'cache' && mode !== 'live') {
+            throw new Error(`Invalid mode: ${mode}. Must be 'cache' or 'live'`);
         }
         this.mode = mode;
         // Clear cache when switching modes
@@ -444,7 +511,7 @@ class CremaClient {
     
     /**
      * Get current mode
-     * @returns {string} Current mode ('cache' or 'realtime')
+     * @returns {string} Current mode ('cache' or 'live')
      */
     getMode() {
         return this.mode;

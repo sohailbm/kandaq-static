@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="light dark">
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https://mapsredmond.org data: blob:; default-src 'self' data: blob:;">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:9003 http://localhost:9010 http://localhost:8080 https://localhost:9003 https://localhost:9010 https://localhost:8080; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https://mapsredmond.org data: blob:; connect-src 'self' http://localhost:9003 http://localhost:9010 http://localhost:8080 https://localhost:9003 https://localhost:9010 https://localhost:8080 data: blob:; default-src 'self' http://localhost:9003 http://localhost:9010 http://localhost:8080 https://localhost:9003 https://localhost:9010 https://localhost:8080 data: blob:;">
     <title>Muslim Association of Puget Sound - Dashboard</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>" type="image/svg+xml">
     
@@ -316,6 +316,11 @@ body {
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 24px;
     margin-top: 24px;
+}
+
+#expenses-by-category-list {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 100%;
 }
 
 .board-analysis-card {
@@ -929,6 +934,10 @@ body {
         gap: 16px;
     }
     
+    #expenses-by-category-list {
+        grid-template-columns: 1fr;
+    }
+    
     .board-analysis-card {
         padding: 20px;
     }
@@ -982,18 +991,6 @@ body {
             </div>
             <div class="metrics-grid">
 
-<div class="metric-card" data-metric-id="expenses_quickbooks">
-    <div class="metric-header">
-        <h3 class="metric-name">Expenses (QuickBooks)</h3>
-        
-    </div>
-    <div class="metric-value">—</div>
-    <div class="metric-target" style="display: none;"></div>
-    
-    <div class="metric-category">operations</div>
-    
-</div>
-
 <div class="metric-card" data-metric-id="revenue_quickbooks">
     <div class="metric-header">
         <h3 class="metric-name">Revenue (QuickBooks)</h3>
@@ -1003,6 +1000,18 @@ body {
     <div class="metric-target" style="display: none;"></div>
     
     <div class="metric-category">financial</div>
+    
+</div>
+
+<div class="metric-card" data-metric-id="expenses_quickbooks">
+    <div class="metric-header">
+        <h3 class="metric-name">Expenses (QuickBooks)</h3>
+        
+    </div>
+    <div class="metric-value">—</div>
+    <div class="metric-target" style="display: none;"></div>
+    
+    <div class="metric-category">operations</div>
     
 </div>
 
@@ -1023,78 +1032,155 @@ body {
         </section>
         
         <!-- Board Analyses Sections (moved up for better visibility) -->
-        <!-- Revenue by Source -->
-        <section id="revenue-by-source-section-container" style="margin-bottom: 0.5rem; display: none;">
-            <div id="revenue-by-source-section" style="margin-bottom: 0;">
-                <h3 style="font-size: 1.25em; margin-bottom: 0.75rem; color: var(--text-primary);">Revenue by Source</h3>
-                <div id="revenue-sources-list" class="board-analyses-grid">
-                    <!-- Revenue sources will be populated here -->
-                </div>
-                <div id="revenue-sources-chart" style="margin-top: 1.5rem; height: 300px; display: none;">
-                    <!-- Chart will be rendered here -->
-                </div>
-                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
-                    <span style="color: #10b981;">✅</span> 100% Confidence - Business concepts (not source systems)
-                </p>
-            </div>
-        </section>
-        
-        <!-- Expenses by Type -->
-        <section id="expenses-by-type-section-container" style="margin-bottom: 0.5rem; display: none;">
-            <div id="expenses-by-type-section" style="margin-bottom: 0;">
-                <h3 style="font-size: 1.25em; margin-bottom: 0.75rem; color: var(--text-primary);">Expenses by Type</h3>
-                <div id="expenses-by-type-list" class="board-analyses-grid">
-                    <!-- Expense types will be populated here -->
-                </div>
-                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
-                    <span style="color: #10b981;">✅</span> 100% Confidence - Account-based calculation
-                </p>
-            </div>
-        </section>
-        
-        <!-- Top Donors -->
-        <section id="top-donors-section-container" style="margin-bottom: 0.5rem; display: none;">
-            <div id="top-donors-section" style="margin-bottom: 0;">
-                <h3 style="font-size: 1.25em; margin-bottom: 0.75rem; color: var(--text-primary);">Top Donors</h3>
-                <div class="card" style="padding: 1.5rem;">
-                    <div id="top-donors-list" style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse;">
+        <!-- Revenue by Source and Expenses by Category Side by Side -->
+        <section id="revenue-expenses-section-container" style="margin-bottom: 1rem; display: none;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start;">
+                <!-- Revenue by Account -->
+                <div id="revenue-by-account-section" style="margin-bottom: 0;">
+                    <h3 style="font-size: 1.25em; margin-bottom: 0.75rem; color: var(--text-primary);">Revenue by Account</h3>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;">
                             <thead>
-                                <tr style="border-bottom: 2px solid var(--border-color);">
-                                    <th style="text-align: left; padding: 0.75rem; font-weight: 600; color: var(--text-primary);">Donor</th>
-                                    <th style="text-align: right; padding: 0.75rem; font-weight: 600; color: var(--text-primary);">Total</th>
-                                    <th style="text-align: center; padding: 0.75rem; font-weight: 600; color: var(--text-primary);">Donations</th>
-                                    <th style="text-align: right; padding: 0.75rem; font-weight: 600; color: var(--text-primary);">Avg</th>
-                                    <th style="text-align: center; padding: 0.75rem; font-weight: 600; color: var(--text-primary);">Last Donation</th>
+                                <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--text-primary);">Account</th>
+                                    <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Total</th>
+                                    <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Count</th>
+                                    <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Percentage</th>
                                 </tr>
                             </thead>
-                            <tbody id="top-donors-tbody">
-                                <tr>
-                                    <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading...</td>
-                                </tr>
+                            <tbody id="revenue-accounts-tbody">
+                                <tr><td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading...</td></tr>
                             </tbody>
+                            <tfoot id="revenue-accounts-tfoot" style="display: none;">
+                                <tr style="background: #f9fafb; border-top: 2px solid #e5e7eb; font-weight: 600;">
+                                    <td colspan="1" style="padding: 12px; text-align: right;">Total Revenue:</td>
+                                    <td id="revenue-accounts-total" style="padding: 12px; text-align: right; color: #10b981;"></td>
+                                    <td style="padding: 12px;"></td>
+                                    <td style="padding: 12px;"></td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
+                    <div id="revenue-sources-top-donors" style="margin-top: 1rem;">
+                        <!-- Top donors will be populated here -->
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                        <span style="color: #10b981;">✅</span> 100% Confidence - Business concepts (not source systems)
+                    </p>
+                </div>
+        
+        <!-- Expenses by Account -->
+            <div id="expenses-by-account-section" style="margin-bottom: 0;">
+                <h3 style="font-size: 1.25em; margin-bottom: 0.75rem; color: var(--text-primary);">Expenses by Account</h3>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;">
+                            <thead>
+                                <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--text-primary);">Account</th>
+                                    <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Total</th>
+                                    <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Count</th>
+                                    <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Percentage</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expenses-by-account-tbody">
+                                <tr><td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading...</td></tr>
+                            </tbody>
+                            <tfoot id="expenses-by-account-tfoot" style="display: none;">
+                                <tr style="background: #f9fafb; border-top: 2px solid #e5e7eb; font-weight: 600;">
+                                    <td colspan="1" style="padding: 12px; text-align: right;">Total Expenses:</td>
+                                    <td id="expenses-by-account-total" style="padding: 12px; text-align: right; color: #ef4444;"></td>
+                                    <td style="padding: 12px;"></td>
+                                    <td style="padding: 12px;"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
                 </div>
                 <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
-                    <span style="color: #10b981;">✅</span> <span id="donor-coverage">96.7%</span> Confidence - <span id="donor-coverage-details">5,870 of 6,072 donations</span>
+                    <span style="color: #10b981;">✅</span> 100% Confidence - Business category analysis
                 </p>
+                </div>
             </div>
         </section>
         
-        <!-- Programs -->
-        <section id="programs-section-container" style="margin-bottom: 0.5rem; display: none;">
+        <!-- Account Totals - Revenue and Expenses Side by Side -->
+        <section id="account-totals-section-container" style="margin-bottom: 1rem; display: none;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start;">
+                <!-- Income Accounts -->
+            <div id="account-totals-income-section" style="margin-bottom: 0;">
+                <h3 style="font-size: 1.25em; margin-bottom: 0.75rem; color: var(--text-primary);">Income Accounts</h3>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;">
+                        <thead>
+                            <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+                                <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--text-primary);">Account Name</th>
+                                <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--text-primary);">Type</th>
+                                <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Total</th>
+                                <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Count</th>
+                            </tr>
+                        </thead>
+                        <tbody id="income-accounts-tbody">
+                            <tr><td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading...</td></tr>
+                        </tbody>
+                        <tfoot id="income-accounts-tfoot" style="display: none;">
+                            <tr style="background: #f9fafb; border-top: 2px solid #e5e7eb; font-weight: 600;">
+                                <td colspan="2" style="padding: 12px; text-align: right;">Total Income:</td>
+                                <td id="income-accounts-total" style="padding: 12px; text-align: right; color: #10b981;"></td>
+                                <td style="padding: 12px;"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        
+                <!-- Expense Accounts -->
+            <div id="account-totals-expense-section" style="margin-bottom: 0;">
+                <h3 style="font-size: 1.25em; margin-bottom: 0.75rem; color: var(--text-primary);">Expense Accounts</h3>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;">
+                        <thead>
+                            <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+                                <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--text-primary);">Account Name</th>
+                                <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--text-primary);">Type</th>
+                                <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Total</th>
+                                <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Count</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expense-accounts-tbody">
+                            <tr><td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading...</td></tr>
+                        </tbody>
+                        <tfoot id="expense-accounts-tfoot" style="display: none;">
+                            <tr style="background: #f9fafb; border-top: 2px solid #e5e7eb; font-weight: 600;">
+                                <td colspan="2" style="padding: 12px; text-align: right;">Total Expense:</td>
+                                <td id="expense-accounts-total" style="padding: 12px; text-align: right; color: #ef4444;"></td>
+                                <td style="padding: 12px;"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Donation Insights Section -->
+        <section id="donation-insights-section-container" style="margin-bottom: 1rem; display: none;">
+            <div id="donation-insights-content">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Programs Section -->
+        <section id="programs-section-container" style="margin-bottom: 1rem; display: none;">
             <div id="programs-section" style="margin-bottom: 0;">
                 <h3 style="font-size: 1.25em; margin-bottom: 0.75rem; color: var(--text-primary);">Programs</h3>
                 <div id="programs-list" style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse;">
+                    <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;">
                         <thead>
-                            <tr style="border-bottom: 2px solid var(--border-color);">
-                                <th style="text-align: left; padding: 0.75rem; font-weight: 600; color: var(--text-primary);">Program</th>
-                                <th style="text-align: right; padding: 0.75rem; font-weight: 600; color: var(--text-primary);">Revenue</th>
-                                <th style="text-align: right; padding: 0.75rem; font-weight: 600; color: var(--text-primary);">Expenses</th>
-                                <th style="text-align: right; padding: 0.75rem; font-weight: 600; color: var(--text-primary);">Net Income</th>
-                                <th style="text-align: right; padding: 0.75rem; font-weight: 600; color: var(--text-primary);">Profit Margin</th>
+                            <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+                                <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--text-primary);">Program</th>
+                                <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Revenue</th>
+                                <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Expenses</th>
+                                <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Net Income</th>
+                                <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Profit Margin</th>
                             </tr>
                         </thead>
                         <tbody id="programs-tbody">
@@ -1105,40 +1191,8 @@ body {
                     </table>
                 </div>
                 <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
-                    <span style="color: #f59e0b;">⚠️</span> <span id="programs-coverage">Partial</span> Coverage - Only includes transactions with ClassRef assigned in QuickBooks
-                </p>
-            </div>
-        </section>
-        
-        <!-- Funds -->
-        <section id="funds-section-container" style="margin-bottom: 0.5rem; display: block;">
-            <div id="funds-section" style="margin-bottom: 0;">
-                <h3 style="font-size: 1.25em; margin-bottom: 0.75rem; color: var(--text-primary);">Funds</h3>
-                <div class="card" style="padding: 1.5rem;">
-                    <div id="funds-list" style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <thead>
-                                <tr style="border-bottom: 2px solid var(--border-color);">
-                                    <th style="text-align: left; padding: 0.75rem; font-weight: 600; color: var(--text-primary);">Fund Name</th>
-                                    <th style="text-align: left; padding: 0.75rem; font-weight: 600; color: var(--text-primary);">Type</th>
-                                    <th style="text-align: right; padding: 0.75rem; font-weight: 600; color: var(--text-primary);">Revenue</th>
-                                    <th style="text-align: right; padding: 0.75rem; font-weight: 600; color: var(--text-primary);">Expenses</th>
-                                    <th style="text-align: right; padding: 0.75rem; font-weight: 600; color: var(--text-primary);">Net</th>
-                                    <th style="text-align: right; padding: 0.75rem; font-weight: 600; color: var(--text-primary);">Margin</th>
-                                </tr>
-                            </thead>
-                            <tbody id="funds-tbody">
-                                <tr>
-                                    <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
-                    <span id="funds-coverage-indicator" style="color: #f59e0b;">⚠️</span> <span id="funds-coverage">Partial</span> Coverage - <span id="funds-coverage-details">Only includes transactions with fund_id</span>
-                    <br>
-                    <span style="color: #10b981; font-size: 0.8rem;">✅ Using JOINs to ensure only valid fund relationships are counted</span>
+                    <span id="programs-coverage-indicator" style="color: #f59e0b;">⚠️</span>
+                    <span id="programs-coverage">Partial</span> Coverage - Only includes transactions with ClassRef assigned in QuickBooks
                 </p>
             </div>
         </section>
@@ -1152,12 +1206,21 @@ body {
 // Static deployment - cache mode only
 const TENANT_ID = "maps";
 const BUSINESS_TYPE = "non_profit_organization";
+const API_URL = "http://localhost:9010"; // API base URL for live mode fallback
 
-// Initialize Crema Client (cache mode only - no API)
+// Initialize Crema Client - mode can be set via URL parameter ?mode=live or ?mode=cache
+const urlParams = new URLSearchParams(window.location.search);
+const modeParam = urlParams.get('mode');
+const defaultMode = 'cache'; // Default to cache for static deployment
+const cremaMode = (modeParam === 'live' || modeParam === 'cache') ? modeParam : defaultMode;
+
 const crema = new CremaClient(TENANT_ID, {
-    mode: 'cache',
+    mode: cremaMode,
     cacheDir: 'data'
 });
+
+// Log mode for debugging
+console.log(`🔧 CremaClient initialized in '${cremaMode}' mode${modeParam ? ` (from URL parameter)` : ` (default)`}`);
 
 // Legacy categories (kept for backward compatibility, but will be replaced by Crema data)
 const CREMA_CATEGORIES = [{"color":"#FF9500","count":6,"description":"Image files","icon":"photo","key":"image","mimeTypes":["image/jpeg","image/png","image/gif","image/webp","image/bmp","image/tiff","image/svg+xml"],"name":"Images","order":0,"schema":{"fields":["entity_type","file_name","file_path","file_size","file_type","mime_type"]}},{"color":"#34C759","count":9,"description":"Document files","icon":"doc.text","key":"document","mimeTypes":["application/pdf","application/msword","application/vnd.openxmlformats-officedocument.wordprocessingml.document","text/plain","application/rtf","application/vnd.oasis.opendocument.text"],"name":"Documents","order":1,"schema":{"fields":["entity_type","file_name","file_path","file_size","file_type","mime_type"]}},{"color":"#AF52DE","count":6,"description":"Video files","icon":"video","key":"video","mimeTypes":["video/mp4","video/quicktime","video/x-msvideo","video/x-ms-wmv","video/x-flv","video/x-matroska","video/webm"],"name":"Videos","order":2,"schema":{"fields":["entity_type","file_name","file_path","file_size","file_type","mime_type"]}},{"color":"#FF2D92","count":6,"description":"Audio files","icon":"music.note","key":"audio","mimeTypes":["audio/mpeg","audio/wav","audio/mp4","audio/flac","audio/aac","audio/ogg","audio/x-m4a"],"name":"Audio","order":3,"schema":{"fields":["entity_type","file_name","file_path","file_size","file_type","mime_type"]}},{"color":"#8E8E93","count":5,"description":"Binary files","icon":"gear","key":"binary","mimeTypes":["application/octet-stream","application/x-executable","application/x-msdownload","application/x-dmg","application/x-sharedlib"],"name":"Binary","order":5,"schema":{"fields":["author_name","file_dir","file_name","file_path","file_size","file_type","mime_type","place_id","place_name","rating","relative_time_description","text","time"]}}];
@@ -1174,17 +1237,21 @@ async function fetchCremaData() {
         if (CREMA_DATA) {
             // Extract all entities from sources for backward compatibility
             const allEntities = (CREMA_DATA.sources || []).flatMap(s => s.entities || []);
-            updateEntityCounts(allEntities);
+            if (typeof updateEntityCounts === 'function') {
+                updateEntityCounts(allEntities);
+            }
             // Build entity schemas from Crema data (uses Crema's knowledge of entities)
-            buildEntitySchemasFromCrema(CREMA_DATA);
+            if (typeof buildEntitySchemasFromCrema === 'function') {
+                buildEntitySchemasFromCrema(CREMA_DATA);
+            }
             console.log('✅ Crema data loaded successfully');
         } else {
             console.warn('⚠️ Crema data is null or empty');
         }
     } catch (error) {
         // Cache mode only: Crema data is optional - app can work without it
-        console.warn('⚠️ Crema data not found in cache files (optional):', error.message);
-        console.log('ℹ️ App will continue without Crema data. Some features may be limited.');
+        console.warn('⚠️ Error loading Crema data (optional):', error.message);
+        console.log('ℹ️ App will continue without Crema data. This is normal if Crema discovery is not enabled.');
         CREMA_DATA = null;
     }
 }
@@ -1262,7 +1329,7 @@ function calculateBusinessMetrics(entityType, records, totalCount) {
         
         metrics.push({
             label: `Total ${entityLabel}`,
-            value: `$${sum.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`,
+            value: `$${sum.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`,
             detail: `${recordCount} ${entityLabel.toLowerCase()}`,
             priority: 1
         });
@@ -1270,7 +1337,7 @@ function calculateBusinessMetrics(entityType, records, totalCount) {
         if (amounts.length > 1) {
             metrics.push({
                 label: `Avg ${entityLabel}`,
-                value: `$${avg.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`,
+                value: `$${avg.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`,
                 detail: `Per ${entityLabel.toLowerCase()}`,
                 priority: 2
             });
@@ -1357,8 +1424,8 @@ window.quickAnalyze = function(records, fieldArray) {
                     type: 'financial',
                     field: field,
                     label: field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-                    value: `$${stats.sum.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`,
-                    detail: `Avg: $${stats.avg.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} | Range: $${stats.min.toLocaleString()} - $${stats.max.toLocaleString()}`,
+                    value: `$${stats.sum.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`,
+                    detail: `Avg: $${stats.avg.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})} | Range: $${stats.min.toLocaleString()} - $${stats.max.toLocaleString()}`,
                     coverage: coverage
                 });
             } else if (fieldLower.includes('count') || fieldLower.includes('quantity') || fieldLower.includes('qty')) {
@@ -1535,7 +1602,7 @@ window.formatFieldValueHTML = function(value, fieldName) {
                              fieldName.toLowerCase().includes('total') ||
                              fieldName.toLowerCase().includes('price') ||
                              fieldName.toLowerCase().includes('cost'))) {
-                return '$' + value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                return '$' + value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
             }
             return value.toLocaleString('en-US');
         }
@@ -1794,6 +1861,16 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// Helper function to format currency
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(amount);
 }
 
 // Map SF Symbols to Font Awesome icons
@@ -3107,7 +3184,7 @@ function showResultsModal(title, results) {
                     if (originalData.email) extractedFields.push(['Email', originalData.email]);
                     if (originalData.phone) extractedFields.push(['Phone', originalData.phone]);
                     if (originalData.address) extractedFields.push(['Address', originalData.address]);
-                    if (originalData.balance !== undefined) extractedFields.push(['Balance', '$' + parseFloat(originalData.balance || 0).toFixed(2)]);
+                    if (originalData.balance !== undefined) extractedFields.push(['Balance', '$' + parseFloat(originalData.balance || 0).toFixed(0)]);
                     
                     if (extractedFields.length > 0) {
                         structuredDataHtml = '<div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e5e7eb;">';
@@ -3177,12 +3254,6 @@ function closeResultsModal() {
     }
 }
 
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
 // Handle entity card clicks (entire card or button)
 document.addEventListener('click', async (e) => {
     // Check if clicked on entity card
@@ -3250,9 +3321,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Fetch metrics for a time range (static mode - cache only)
+// Fetch metrics for a time range (supports both cache and live modes)
 async function fetchMetricsWithTimeRange(timeRange = 'this_year') {
-    console.log(`📊 Fetching metrics for time range: ${timeRange} (mode: cache)`);
+    const currentMode = typeof crema !== 'undefined' ? crema.getMode() : 'cache';
+    console.log(`📊 Fetching metrics for time range: ${timeRange} (mode: ${currentMode})`);
     showLoading('metrics');
     
     try {
@@ -3283,28 +3355,77 @@ async function fetchMetricsWithTimeRange(timeRange = 'this_year') {
             }
         }
         
-        // Use CremaClient to get metrics from cache
-        const metrics = await crema.getMetrics(kandaqTimeRange);
+        // In live mode, fetch both metrics and dashboard in parallel for better performance
+        // In cache mode, use sequential loading from cache files
+        let metrics, sourceTargets = {}, boardMetrics;
+        
+        if (cremaMode === 'live') {
+            // Parallelize API calls in live mode - both endpoints take ~20s, so parallel saves ~20s
+            const dashboardUrl = API_URL + '/api/tenants/' + TENANT_ID + '/dashboard?time_range=' + kandaqTimeRange;
+            console.log('📊 Fetching metrics and dashboard data in parallel...');
+            
+            const [metricsResult, dashboardResult] = await Promise.allSettled([
+                crema.getMetrics(kandaqTimeRange),
+                fetch(dashboardUrl, {
+                    headers: {
+                        'X-Tenant-ID': TENANT_ID,
+                        'Content-Type': 'application/json'
+                    }
+                }).then(res => res.ok ? res.json() : null)
+            ]);
+            
+            // Get metrics from either result
+            if (metricsResult.status === 'fulfilled') {
+                metrics = metricsResult.value;
+            } else {
+                console.warn('⚠️ Metrics fetch failed:', metricsResult.reason);
+                metrics = null;
+            }
+            
+            // Get dashboard data for board analyses
+            if (dashboardResult.status === 'fulfilled' && dashboardResult.value) {
+                const dashboardData = dashboardResult.value;
+                const dashboardMetrics = dashboardData.data?.metrics || dashboardData.metrics || {};
+                boardMetrics = dashboardMetrics;
+                sourceTargets = dashboardData.data?.source_targets || {};
+                console.log('✅ Loaded board metrics from API', Object.keys(boardMetrics).slice(0, 10));
+                
+                // If metrics fetch failed, use dashboard metrics as fallback
+                if (!metrics) {
+                    metrics = dashboardMetrics;
+                }
+            } else {
+                console.warn('⚠️ Dashboard fetch failed:', dashboardResult.reason);
+                // Fallback to metrics only
+                boardMetrics = metrics;
+            }
+        } else {
+            // Cache mode: sequential loading from cache files
+            metrics = await crema.getMetrics(kandaqTimeRange);
+            boardMetrics = metrics;
+            
+            try {
+                const cacheData = await crema.loadCacheFile(kandaqTimeRange);
+                sourceTargets = cacheData?.source_targets || {};
+                if (cacheData?.metrics) {
+                    if (cacheData.metrics[kandaqTimeRange]?.metrics) {
+                        boardMetrics = cacheData.metrics[kandaqTimeRange].metrics;
+                        console.log(`✅ Loaded board metrics from nested cache: ${kandaqTimeRange}`);
+                    } else if (cacheData.metrics[kandaqTimeRange]) {
+                        boardMetrics = cacheData.metrics[kandaqTimeRange];
+                        console.log(`✅ Loaded board metrics from cache: ${kandaqTimeRange}`);
+                    } else {
+                        boardMetrics = cacheData.metrics;
+                        console.log('✅ Loaded board metrics from flat cache structure', Object.keys(boardMetrics).slice(0, 10));
+                    }
+                }
+            } catch (e) {
+                console.warn('⚠️ Could not load full cache file:', e);
+            }
+        }
         
         if (!metrics) {
             throw new Error('No metrics data returned');
-        }
-        
-        // Get source targets and full cache data if available
-        let sourceTargets = {};
-        let boardMetrics = metrics;
-        
-        try {
-            // Load full cache file to get source_targets and board analyses
-            const cacheData = await crema.loadCacheFile(kandaqTimeRange);
-            sourceTargets = cacheData?.source_targets || {};
-            // Use full cache metrics for board analyses (may have more data)
-            if (cacheData?.metrics) {
-                boardMetrics = cacheData.metrics;
-            }
-        } catch (e) {
-            console.warn('⚠️ Could not load full cache file:', e);
-            // Continue with metrics-only data
         }
         
         // Update metrics display
@@ -3315,21 +3436,40 @@ async function fetchMetricsWithTimeRange(timeRange = 'this_year') {
         // Process board analyses for nonprofits
         if (BUSINESS_TYPE === 'non_profit_organization') {
             
-            // Process board analyses
-            if (boardMetrics?.revenue_by_source && typeof updateRevenueBySource === 'function') {
-                updateRevenueBySource(boardMetrics.revenue_by_source);
+            // Process board analyses - check both boardMetrics and metrics for data
+            const revenueByAccount = boardMetrics?.revenue_by_account || metrics?.revenue_by_account;
+            const expensesByAccount = boardMetrics?.expenses_by_account || metrics?.expenses_by_account;
+            
+            console.log('🔍 Revenue by Account data:', revenueByAccount ? 'Found' : 'Missing', revenueByAccount ? `${revenueByAccount.accounts?.length || 0} accounts` : '');
+            console.log('🔍 Expenses by Account data:', expensesByAccount ? 'Found' : 'Missing', expensesByAccount ? `${expensesByAccount.accounts?.length || 0} accounts` : '');
+            
+            if (revenueByAccount && typeof updateRevenueByAccount === 'function') {
+                console.log('✅ Calling updateRevenueByAccount');
+                updateRevenueByAccount(revenueByAccount);
+            } else {
+                console.warn('⚠️ Revenue by Account not updated:', { hasData: !!revenueByAccount, hasFunction: typeof updateRevenueByAccount === 'function' });
             }
-            if (boardMetrics?.expenses_by_type && typeof updateExpensesByType === 'function') {
-                updateExpensesByType(boardMetrics.expenses_by_type);
+            // Update expense displays
+            if (expensesByAccount && typeof updateExpensesByAccount === 'function') {
+                console.log('✅ Calling updateExpensesByAccount');
+                updateExpensesByAccount(expensesByAccount);
+            } else {
+                console.warn('⚠️ Expenses by Account not updated:', { hasData: !!expensesByAccount, hasFunction: typeof updateExpensesByAccount === 'function' });
             }
-            if (boardMetrics?.programs && typeof updatePrograms === 'function') {
-                updatePrograms(boardMetrics.programs);
+            // Update account totals
+            if (boardMetrics?.account_totals && typeof updateAccountTotals === 'function') {
+                updateAccountTotals(boardMetrics.account_totals);
             }
-            if (boardMetrics?.top_donors && typeof updateTopDonors === 'function') {
-                updateTopDonors(boardMetrics.top_donors);
+            
+            // Update donation insights (frequency patterns and monthly patterns)
+            const donationInsights = boardMetrics?.nonprofit_kpis?.donation_insights || metrics?.nonprofit_kpis?.donation_insights;
+            if (donationInsights && typeof updateDonationInsights === 'function') {
+                updateDonationInsights(donationInsights);
             }
-            if (boardMetrics?.funds && typeof updateFunds === 'function') {
-                updateFunds(boardMetrics.funds);
+
+            if (typeof updatePrograms === 'function') {
+                const programsData = boardMetrics?.programs || metrics?.programs || null;
+                updatePrograms(programsData);
             }
         }
         
@@ -3402,7 +3542,7 @@ function formatMetricValue(metricId, value) {
         metricId.includes('total') || metricId.includes('net')) {
         const numValue = typeof value === 'string' ? parseFloat(value.replace(/[^0-9.-]/g, '')) : Number(value);
         if (isNaN(numValue)) return '—';
-        return '$' + numValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return '$' + numValue.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
     }
     
     // Handle count metrics
@@ -3478,7 +3618,7 @@ function updateMetrics(data, timeRange = 'this_year', sourceTargets = {}) {
     }
     
     // Board analysis components that are handled separately (not metric cards)
-    const boardAnalysisKeys = ['top_donors', 'programs', 'revenue_by_source', 'expenses_by_type'];
+    const boardAnalysisKeys = ['revenue_by_source', 'expenses_by_category', 'account_totals'];
     
     Object.keys(data).forEach(metricId => {
         // Skip internal fields
@@ -3523,6 +3663,32 @@ function updateMetrics(data, timeRange = 'this_year', sourceTargets = {}) {
             
             valueElement.innerHTML = formatMetricValue(metricId, displayValue);
             
+            // Update profit margin display for net income metric
+            if (metricId === 'net_income_quickbooks') {
+                const revenue = data.revenue_quickbooks || data.revenue || 0;
+                const netIncome = displayValue;
+                
+                // Extract numeric values
+                const revenueNum = typeof revenue === 'string' 
+                    ? parseFloat(revenue.replace(/[^0-9.-]/g, '')) 
+                    : Number(revenue);
+                const netIncomeNum = typeof netIncome === 'string' 
+                    ? parseFloat(netIncome.replace(/[^0-9.-]/g, '')) 
+                    : Number(netIncome);
+                
+                // Calculate and display profit margin
+                const profitMarginEl = document.getElementById('profit-margin-display');
+                if (profitMarginEl && revenueNum > 0) {
+                    const profitMargin = (netIncomeNum / revenueNum * 100);
+                    const color = profitMargin >= 0 ? '#10b981' : '#ef4444';
+                    profitMarginEl.textContent = `Profit Margin: ${profitMargin.toFixed(2)}%`;
+                    profitMarginEl.style.color = color;
+                } else if (profitMarginEl && revenueNum === 0) {
+                    profitMarginEl.textContent = '—';
+                    profitMarginEl.style.color = 'var(--text-secondary)';
+                }
+            }
+            
             // Check for source target and update UI
             let targetInfo = targetsForTimeRange[metricId];
             if (!targetInfo) {
@@ -3544,7 +3710,7 @@ function updateMetrics(data, timeRange = 'this_year', sourceTargets = {}) {
                 if (percentDiff !== null && percentDiff !== undefined && !isNaN(percentDiff)) {
                     let varianceText;
                     if (percentDiff < 0.1) {
-                        varianceText = `${percentDiff.toFixed(2)}% variance`;
+                        varianceText = `${percentDiff.toFixed(0)}% variance`;
                     } else if (percentDiff < 1) {
                         varianceText = `${percentDiff.toFixed(1)}% variance`;
                     } else if (percentDiff < 10) {
@@ -3590,175 +3756,579 @@ function updateMetrics(data, timeRange = 'this_year', sourceTargets = {}) {
     });
 }
 
-function updateRevenueBySource(data) {
-    if (!data || !data.sources) return;
-    const sectionContainer = document.getElementById('revenue-by-source-section-container');
+function updateRevenueByAccount(data) {
+    if (!data || !data.accounts) {
+        console.warn('⚠️ updateRevenueByAccount: Missing data or data.accounts', data);
+        return;
+    }
+    const sectionContainer = document.getElementById('revenue-expenses-section-container');
     if (sectionContainer) sectionContainer.style.display = 'block';
-    const sourcesList = document.getElementById('revenue-sources-list');
-    if (!sourcesList) return;
-    sourcesList.innerHTML = '';
-    const sources = Object.entries(data.sources).sort((a, b) => b[1].total - a[1].total);
-    sources.forEach(([sourceName, sourceData]) => {
-        const sourceCard = document.createElement('div');
-        sourceCard.className = 'board-analysis-card';
-        let breakdownHTML = '';
-        if (sourceData.breakdown) {
-            breakdownHTML = '<div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e7eb;"><div style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.75rem; font-weight: 600;">Breakdown:</div>';
-            const breakdownEntries = Object.entries(sourceData.breakdown).sort((a, b) => b[1].total - a[1].total);
-            breakdownEntries.forEach(([breakdownName, breakdownData]) => {
-                breakdownHTML += `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding: 0.75rem; background: #f9fafb; border-radius: 6px;"><div style="display: flex; align-items: center; gap: 0.5rem;"><span style="font-size: 0.9rem; color: #1f2937; font-weight: 500;">${escapeHtml(breakdownName)}</span><span style="font-size: 0.8rem; color: #6b7280;">(${breakdownData.count || 0} transactions)</span></div><div style="text-align: right;"><div style="font-weight: 600; color: #1f2937; font-size: 0.95rem;">$${parseFloat(breakdownData.total || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div><div style="font-size: 0.75rem; color: #6b7280;">${breakdownData.percentage ? breakdownData.percentage.toFixed(1) : '0.0'}% of ${escapeHtml(sourceName)}</div></div></div>`;
-            });
-            breakdownHTML += '</div>';
-        }
-        sourceCard.innerHTML = `<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;"><h4 style="margin: 0; font-size: 1.1em; color: #1f2937; font-weight: 600;">${escapeHtml(sourceName)}</h4><span style="font-weight: 700; color: #1a472a; font-size: 1.5em;">$${parseFloat(sourceData.total || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div><div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: #6b7280; margin-bottom: 0.75rem;"><span>${sourceData.count.toLocaleString()} transactions</span><span style="font-weight: 600;">${sourceData.percentage.toFixed(1)}% of total</span></div><div style="height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden;"><div style="height: 100%; background: #1a472a; width: ${sourceData.percentage}%; transition: width 0.3s ease;"></div></div>${breakdownHTML}`;
-        sourcesList.appendChild(sourceCard);
-    });
+    
+    const tbody = document.getElementById('revenue-accounts-tbody');
+    const tfoot = document.getElementById('revenue-accounts-tfoot');
+    const totalCell = document.getElementById('revenue-accounts-total');
+    
+    // Get total revenue for percentage calculations
+    const totalRevenue = data.total_revenue || data.accounts.reduce((sum, account) => sum + (account.total || 0), 0);
+    
+    if (tbody) {
+        tbody.innerHTML = '';
+        
+        // Sort accounts by total (descending)
+        const sortedAccounts = [...data.accounts].sort((a, b) => (b.total || 0) - (a.total || 0));
+        
+        // Render each account as a row
+        sortedAccounts.forEach((account) => {
+            const percentage = account.percentage || (totalRevenue > 0 ? ((account.total || 0) / totalRevenue * 100) : 0);
+            const row = document.createElement('tr');
+            row.style.borderBottom = '1px solid #e5e7eb';
+            row.innerHTML = `
+                <td style="padding: 12px;">${escapeHtml(account.account_name || 'N/A')}</td>
+                <td style="padding: 12px; text-align: right; font-weight: 500; color: #10b981;">$${Math.round(account.total || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                <td style="padding: 12px; text-align: right; color: var(--text-secondary);">${account.count || 0}</td>
+                <td style="padding: 12px; text-align: right; color: var(--text-secondary);">${percentage.toFixed(1)}%</td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+    
+    // Calculate total revenue from accounts
+    if (tfoot && totalCell && totalRevenue > 0) {
+        tfoot.style.display = 'table-footer-group';
+        totalCell.textContent = `$${Math.round(totalRevenue).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+    }
 }
 
-function updateExpensesByType(data) {
-    if (!data || !data.sources) return;
-    const sectionContainer = document.getElementById('expenses-by-type-section-container');
-    if (sectionContainer) sectionContainer.style.display = 'block';
-    const expensesList = document.getElementById('expenses-by-type-list');
-    if (!expensesList) return;
-    expensesList.innerHTML = '';
-    const expenseTypes = Object.entries(data.sources).sort((a, b) => Math.abs(b[1].total) - Math.abs(a[1].total));
-    expenseTypes.forEach(([typeName, typeData]) => {
-        const expenseCard = document.createElement('div');
-        expenseCard.className = 'board-analysis-card expense-card';
-        const isNegative = typeData.total < 0;
-        const color = isNegative ? '#10b981' : '#dc2626';
-        if (isNegative) expenseCard.style.borderLeftColor = '#10b981';
-        expenseCard.innerHTML = `<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;"><h4 style="margin: 0; font-size: 1.1em; color: #1f2937; font-weight: 600;">${escapeHtml(typeName)}</h4><span style="font-weight: 700; color: ${color}; font-size: 1.5em;">${isNegative ? '-' : ''}$${Math.abs(parseFloat(typeData.total || 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div><div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: #6b7280; margin-bottom: 0.75rem;"><span>${typeData.count.toLocaleString()} transactions</span><span style="font-weight: 600;">${Math.abs(typeData.percentage).toFixed(1)}% of total</span></div><div style="height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden;"><div style="height: 100%; background: ${color}; width: ${Math.abs(typeData.percentage)}%; transition: width 0.3s ease;"></div></div>`;
-        expensesList.appendChild(expenseCard);
+async function toggleBreakdown(row, breakdown, sourceTotal) {
+    const isExpanded = row.dataset.expanded === 'true';
+    const tbody = row.parentElement;
+    
+    if (isExpanded) {
+        // Collapse: remove breakdown rows
+        const breakdownRows = tbody.querySelectorAll(`tr[data-breakdown-for="${row.dataset.sourceName}"]`);
+        breakdownRows.forEach(r => r.remove());
+        row.dataset.expanded = 'false';
+        const icon = row.querySelector('.expand-icon span');
+        if (icon) icon.textContent = '▶';
+        row.style.backgroundColor = '';
+    } else {
+        // Expand: check if breakdown data exists, if not load it
+        if (!breakdown || Object.keys(breakdown).length === 0) {
+            // Show loading indicator
+            const icon = row.querySelector('.expand-icon span');
+            if (icon) icon.textContent = '⏳';
+            row.style.backgroundColor = '#f9fafb';
+            
+            // Load breakdowns from API
+            try {
+                const timeRangeSelect = document.getElementById('time-range-select');
+                const timeRange = timeRangeSelect ? timeRangeSelect.value : 'this_year';
+                const response = await fetch(`${API_URL}/api/tenants/${TENANT_ID}/dashboard?time_range=${timeRange}&include_breakdowns=true`, {
+                    headers: {
+                        'X-Tenant-ID': TENANT_ID,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                const revenueBySource = data.data?.metrics?.revenue_by_source;
+                if (revenueBySource && revenueBySource.sources && revenueBySource.sources[row.dataset.sourceName]) {
+                    breakdown = revenueBySource.sources[row.dataset.sourceName].breakdown;
+                    sourceTotal = revenueBySource.sources[row.dataset.sourceName].total;
+                }
+            } catch (error) {
+                console.error('Failed to load breakdowns:', error);
+                if (icon) icon.textContent = '▶';
+                row.style.backgroundColor = '';
+                return;
+            }
+        }
+        
+        // Expand: add breakdown rows
+        const breakdownRows = createBreakdownRows(row.dataset.sourceName, breakdown, sourceTotal);
+        breakdownRows.forEach(br => {
+            tbody.insertBefore(br, row.nextSibling);
+        });
+        row.dataset.expanded = 'true';
+        const icon = row.querySelector('.expand-icon span');
+        if (icon) icon.textContent = '▼';
+        row.style.backgroundColor = '#f9fafb';
+    }
+}
+
+function createBreakdownRows(sourceName, breakdown, sourceTotal) {
+    const rows = [];
+    
+    // Breakdown type labels
+    const breakdownLabels = {
+        'by_account': 'By Account',
+        'by_customer': 'By Customer',
+        'by_fund': 'By Fund',
+        'by_purpose': 'By Purpose',
+        'by_campaign': 'By Campaign',
+        'by_payment_method': 'By Payment Method',
+        'by_vendor': 'By Vendor',
+        'by_class': 'By Class/Program'
+    };
+    
+    Object.entries(breakdown).forEach(([breakdownType, breakdownData]) => {
+        if (!breakdownData || Object.keys(breakdownData).length === 0) return;
+        
+        // Header row for this breakdown type
+        const headerRow = document.createElement('tr');
+        headerRow.dataset.breakdownFor = sourceName;
+        headerRow.style.backgroundColor = '#f3f4f6';
+        headerRow.style.borderTop = '2px solid #e5e7eb';
+        headerRow.innerHTML = `
+            <td colspan="5" style="padding: 8px 12px; font-weight: 600; color: #4b5563; font-size: 0.875rem;">
+                ${breakdownLabels[breakdownType] || breakdownType}
+            </td>
+        `;
+        rows.push(headerRow);
+        
+        // Data rows for this breakdown type
+        const sortedItems = Object.entries(breakdownData)
+            .sort((a, b) => (b[1].total || 0) - (a[1].total || 0))
+            .slice(0, 10); // Top 10 items
+        
+        sortedItems.forEach(([itemName, itemData]) => {
+            const itemPercentage = sourceTotal > 0 ? ((itemData.total || 0) / sourceTotal * 100) : 0;
+            const dataRow = document.createElement('tr');
+            dataRow.dataset.breakdownFor = sourceName;
+            dataRow.style.backgroundColor = '#fafafa';
+            dataRow.innerHTML = `
+                <td style="padding: 8px 12px;"></td>
+                <td style="padding: 8px 12px; padding-left: 24px; color: var(--text-secondary); font-size: 0.875rem;">
+                    ${escapeHtml(itemName || 'N/A')}
+                </td>
+                <td style="padding: 8px 12px; text-align: right; font-size: 0.875rem; color: #10b981;">
+                    $${Math.round(itemData.total || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                </td>
+                <td style="padding: 8px 12px; text-align: right; font-size: 0.875rem; color: var(--text-secondary);">
+                    ${itemData.count || 0}
+                </td>
+                <td style="padding: 8px 12px; text-align: right; font-size: 0.875rem; color: var(--text-secondary);">
+                    ${itemPercentage.toFixed(1)}%
+                </td>
+            `;
+            rows.push(dataRow);
+        });
     });
+    
+    return rows;
+}
+
+async function toggleExpenseBreakdown(row, breakdown, categoryTotal) {
+    const isExpanded = row.dataset.expanded === 'true';
+    const tbody = row.parentElement;
+    
+    if (isExpanded) {
+        // Collapse: remove breakdown rows
+        const breakdownRows = tbody.querySelectorAll(`tr[data-breakdown-for="${row.dataset.categoryName}"]`);
+        breakdownRows.forEach(r => r.remove());
+        row.dataset.expanded = 'false';
+        const icon = row.querySelector('.expand-icon span');
+        if (icon) icon.textContent = '▶';
+        row.style.backgroundColor = '';
+    } else {
+        // Expand: check if breakdown data exists, if not load it
+        if (!breakdown || Object.keys(breakdown).length === 0) {
+            // Show loading indicator
+            const icon = row.querySelector('.expand-icon span');
+            if (icon) icon.textContent = '⏳';
+            row.style.backgroundColor = '#f9fafb';
+            
+            // Load breakdowns from API
+            try {
+                const timeRangeSelect = document.getElementById('time-range-select');
+                const timeRange = timeRangeSelect ? timeRangeSelect.value : 'this_year';
+                const response = await fetch(`${API_URL}/api/tenants/${TENANT_ID}/dashboard?time_range=${timeRange}&include_breakdowns=true`, {
+                    headers: {
+                        'X-Tenant-ID': TENANT_ID,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                const expensesByType = data.data?.metrics?.expenses_by_type;
+                if (expensesByType && expensesByType.sources && expensesByType.sources[row.dataset.categoryName]) {
+                    breakdown = expensesByType.sources[row.dataset.categoryName].breakdown;
+                    categoryTotal = expensesByType.sources[row.dataset.categoryName].total;
+                }
+            } catch (error) {
+                console.error('Failed to load breakdowns:', error);
+                if (icon) icon.textContent = '▶';
+                row.style.backgroundColor = '';
+                return;
+            }
+        }
+        
+        // Expand: add breakdown rows
+        const breakdownRows = createExpenseBreakdownRows(row.dataset.categoryName, breakdown, categoryTotal);
+        breakdownRows.forEach(br => {
+            tbody.insertBefore(br, row.nextSibling);
+        });
+        row.dataset.expanded = 'true';
+        const icon = row.querySelector('.expand-icon span');
+        if (icon) icon.textContent = '▼';
+        row.style.backgroundColor = '#f9fafb';
+    }
+}
+
+function createExpenseBreakdownRows(categoryName, breakdown, categoryTotal) {
+    const rows = [];
+    
+    // Breakdown type labels
+    const breakdownLabels = {
+        'by_account': 'By Account',
+        'by_vendor': 'By Vendor',
+        'by_class': 'By Class/Program'
+    };
+    
+    Object.entries(breakdown).forEach(([breakdownType, breakdownData]) => {
+        if (!breakdownData || Object.keys(breakdownData).length === 0) return;
+        
+        // Header row for this breakdown type
+        const headerRow = document.createElement('tr');
+        headerRow.dataset.breakdownFor = categoryName;
+        headerRow.style.backgroundColor = '#f3f4f6';
+        headerRow.style.borderTop = '2px solid #e5e7eb';
+        headerRow.innerHTML = `
+            <td colspan="5" style="padding: 8px 12px; font-weight: 600; color: #4b5563; font-size: 0.875rem;">
+                ${breakdownLabels[breakdownType] || breakdownType}
+            </td>
+        `;
+        rows.push(headerRow);
+        
+        // Data rows for this breakdown type
+        const sortedItems = Object.entries(breakdownData)
+            .sort((a, b) => (b[1].total || 0) - (a[1].total || 0))
+            .slice(0, 10); // Top 10 items
+        
+        sortedItems.forEach(([itemName, itemData]) => {
+            const itemPercentage = categoryTotal > 0 ? ((itemData.total || 0) / categoryTotal * 100) : 0;
+            const dataRow = document.createElement('tr');
+            dataRow.dataset.breakdownFor = categoryName;
+            dataRow.style.backgroundColor = '#fafafa';
+            dataRow.innerHTML = `
+                <td style="padding: 8px 12px;"></td>
+                <td style="padding: 8px 12px; padding-left: 24px; color: var(--text-secondary); font-size: 0.875rem;">
+                    ${escapeHtml(itemName || 'N/A')}
+                </td>
+                <td style="padding: 8px 12px; text-align: right; font-size: 0.875rem; color: #ef4444;">
+                    $${Math.round(itemData.total || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                </td>
+                <td style="padding: 8px 12px; text-align: right; font-size: 0.875rem; color: var(--text-secondary);">
+                    ${itemData.count || 0}
+                </td>
+                <td style="padding: 8px 12px; text-align: right; font-size: 0.875rem; color: var(--text-secondary);">
+                    ${itemPercentage.toFixed(1)}%
+                </td>
+            `;
+            rows.push(dataRow);
+        });
+    });
+    
+    return rows;
+}
+
+function updateAccountTotals(data) {
+    if (!data) return;
+    
+    // Show the unified section container if either income or expense accounts exist
+    const sectionContainer = document.getElementById('account-totals-section-container');
+    const hasIncome = data.income_accounts && Array.isArray(data.income_accounts) && data.income_accounts.length > 0;
+    const hasExpense = data.expense_accounts && Array.isArray(data.expense_accounts) && data.expense_accounts.length > 0;
+    
+    if (sectionContainer && (hasIncome || hasExpense)) {
+        sectionContainer.style.display = 'block';
+    }
+    
+    // Update income accounts table
+    if (hasIncome) {
+        const tbody = document.getElementById('income-accounts-tbody');
+        const tfoot = document.getElementById('income-accounts-tfoot');
+        const totalCell = document.getElementById('income-accounts-total');
+        
+        if (tbody) {
+            tbody.innerHTML = '';
+            data.income_accounts.forEach(account => {
+                const row = document.createElement('tr');
+                row.style.borderBottom = '1px solid #e5e7eb';
+                row.innerHTML = `
+                    <td style="padding: 12px;">${escapeHtml(account.account_name || 'N/A')}</td>
+                    <td style="padding: 12px; color: var(--text-secondary); font-size: 0.9rem;">${escapeHtml(account.account_type || 'Income')}</td>
+                    <td style="padding: 12px; text-align: right; font-weight: 500; color: #10b981;">$${Math.round(account.total_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                    <td style="padding: 12px; text-align: right; color: var(--text-secondary);">${account.transaction_count || 0}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        if (tfoot && totalCell && data.total_income !== undefined) {
+            tfoot.style.display = 'table-footer-group';
+            totalCell.textContent = `$${Math.round(data.total_income).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+        }
+    }
+    
+    // Update expense accounts table
+    if (hasExpense) {
+        const tbody = document.getElementById('expense-accounts-tbody');
+        const tfoot = document.getElementById('expense-accounts-tfoot');
+        const totalCell = document.getElementById('expense-accounts-total');
+        
+        if (tbody) {
+            tbody.innerHTML = '';
+            data.expense_accounts.forEach(account => {
+                const row = document.createElement('tr');
+                row.style.borderBottom = '1px solid #e5e7eb';
+                row.innerHTML = `
+                    <td style="padding: 12px;">${escapeHtml(account.account_name || 'N/A')}</td>
+                    <td style="padding: 12px; color: var(--text-secondary); font-size: 0.9rem;">${escapeHtml(account.account_type || 'Expense')}</td>
+                    <td style="padding: 12px; text-align: right; font-weight: 500; color: #ef4444;">$${Math.round(account.total_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                    <td style="padding: 12px; text-align: right; color: var(--text-secondary);">${account.transaction_count || 0}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        if (tfoot && totalCell && data.total_expense !== undefined) {
+            tfoot.style.display = 'table-footer-group';
+            totalCell.textContent = `$${Math.round(data.total_expense).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+        }
+    }
+}
+
+function updateDonationInsights(data) {
+    if (!data) {
+        console.warn('⚠️ updateDonationInsights: Missing data', data);
+        return;
+    }
+    
+    const sectionContainer = document.getElementById('donation-insights-section-container');
+    const contentDiv = document.getElementById('donation-insights-content');
+    
+    if (!sectionContainer || !contentDiv) {
+        console.warn('⚠️ Donation insights section not found in DOM');
+        return;
+    }
+    
+    let html = '';
+    
+    // Frequency Patterns
+    if (data.frequency_patterns && Array.isArray(data.frequency_patterns) && data.frequency_patterns.length > 0) {
+        const freqPatterns = data.frequency_patterns;
+        let totalDonorsFreq = 0;
+        let totalRevenueFreq = 0.0;
+        
+        freqPatterns.forEach(pattern => {
+            totalDonorsFreq += pattern.donor_count || 0;
+            totalRevenueFreq += pattern.total_revenue || 0;
+        });
+        
+        html += `
+            <div style="margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.25em; margin-bottom: 0.75rem; color: var(--text-primary);">Donation Frequency Patterns</h3>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;">
+                        <thead>
+                            <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+                                <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--text-primary);">Frequency</th>
+                                <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Donors</th>
+                                <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Total Revenue</th>
+                                <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Avg/Donor</th>
+                                <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">% of Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${freqPatterns.map(pattern => `
+                                <tr style="border-bottom: 1px solid #e5e7eb;">
+                                    <td style="padding: 12px; color: var(--text-primary);">${escapeHtml(pattern.frequency_bucket)}</td>
+                                    <td style="padding: 12px; text-align: right; color: var(--text-primary);">${(pattern.donor_count || 0).toLocaleString()}</td>
+                                    <td style="padding: 12px; text-align: right; font-weight: 500; color: #10b981;">${formatCurrency(pattern.total_revenue || 0)}</td>
+                                    <td style="padding: 12px; text-align: right; color: var(--text-secondary);">${formatCurrency(pattern.avg_total_per_donor || 0)}</td>
+                                    <td style="padding: 12px; text-align: right; color: var(--text-secondary);">${(pattern.revenue_share_pct || 0).toFixed(1)}%</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                        <tfoot>
+                            <tr style="background: #f9fafb; border-top: 2px solid #e5e7eb; font-weight: 600;">
+                                <td style="padding: 12px; text-align: right;">Total:</td>
+                                <td style="padding: 12px; text-align: right; color: var(--text-primary);">${totalDonorsFreq.toLocaleString()}</td>
+                                <td style="padding: 12px; text-align: right; color: #10b981;">${formatCurrency(totalRevenueFreq)}</td>
+                                <td style="padding: 12px;"></td>
+                                <td style="padding: 12px; text-align: right; color: var(--text-primary);">100.0%</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                ${data.insights ? `
+                <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+                        <div style="background: white; border-left: 4px solid #f59e0b; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.12); transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);">
+                            <div style="font-size: 0.875rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em; margin-bottom: 8px;">⚠️ Single-Gift Donors</div>
+                            <div style="font-size: 2.5rem; font-weight: 700; color: #f59e0b; margin: 8px 0 12px 0; line-height: 1.1; font-variant-numeric: tabular-nums;">${data.insights.single_donation_donors_pct || 0}%</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary); line-height: 1.5; margin-top: 12px; padding-top: 12px; border-top: 1px solid #f3f4f6;">${(data.insights.single_donation_donors_count || 0).toLocaleString()} donors • Retention opportunity</div>
+                        </div>
+                        <div style="background: white; border-left: 4px solid #10b981; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.12); transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);">
+                            <div style="font-size: 0.875rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em; margin-bottom: 8px;">✅ Repeat Donors</div>
+                            <div style="font-size: 2.5rem; font-weight: 700; color: #10b981; margin: 8px 0 12px 0; line-height: 1.1; font-variant-numeric: tabular-nums;">${data.insights.repeat_donors_pct || 0}%</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary); line-height: 1.5; margin-top: 12px; padding-top: 12px; border-top: 1px solid #f3f4f6;">${(data.insights.repeat_donors_count || 0).toLocaleString()} donors • Engaged supporters</div>
+                        </div>
+                        <div style="background: white; border-left: 4px solid #3b82f6; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.12); transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);">
+                            <div style="font-size: 0.875rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em; margin-bottom: 8px;">⭐ High-Frequency</div>
+                            <div style="font-size: 2.5rem; font-weight: 700; color: #3b82f6; margin: 8px 0 12px 0; line-height: 1.1; font-variant-numeric: tabular-nums;">${data.insights.high_frequency_donors_pct || 0}%</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary); line-height: 1.5; margin-top: 12px; padding-top: 12px; border-top: 1px solid #f3f4f6;">${(data.insights.high_frequency_donors_count || 0).toLocaleString()} donors • 11+ donations/year</div>
+                        </div>
+                    </div>
+                </div>
+                ` : ''}
+            </div>
+        `;
+    }
+    
+    // Monthly Patterns
+    if (data.monthly_patterns && Array.isArray(data.monthly_patterns) && data.monthly_patterns.length > 0) {
+        const monthlyPatterns = data.monthly_patterns;
+        
+        html += `
+            <div style="margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.25em; margin-bottom: 0.75rem; color: var(--text-primary);">Monthly Donation Patterns</h3>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;">
+                        <thead>
+                            <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+                                <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--text-primary);">Month</th>
+                                <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Donations</th>
+                                <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Total Revenue</th>
+                                <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Avg Donation</th>
+                                <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Unique Donors</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${monthlyPatterns.map(pattern => `
+                                <tr style="border-bottom: 1px solid #e5e7eb;">
+                                    <td style="padding: 12px; color: var(--text-primary);">${escapeHtml(pattern.month)}</td>
+                                    <td style="padding: 12px; text-align: right; color: var(--text-secondary);">${(pattern.donation_count || 0).toLocaleString()}</td>
+                                    <td style="padding: 12px; text-align: right; font-weight: 500; color: #10b981;">${formatCurrency(pattern.total_amount || 0)}</td>
+                                    <td style="padding: 12px; text-align: right; color: var(--text-secondary);">${formatCurrency(pattern.avg_donation || 0)}</td>
+                                    <td style="padding: 12px; text-align: right; color: var(--text-secondary);">${(pattern.unique_donors || 0).toLocaleString()}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    }
+    
+    contentDiv.innerHTML = html;
+    sectionContainer.style.display = 'block';
 }
 
 function updatePrograms(data) {
     const sectionContainer = document.getElementById('programs-section-container');
-    if (sectionContainer) sectionContainer.style.display = 'block';
-    if (!data) {
-        const tbody = document.getElementById('programs-tbody');
-        if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No program data available</td></tr>';
-        return;
-    }
     const tbody = document.getElementById('programs-tbody');
     const coverageEl = document.getElementById('programs-coverage');
-    if (!tbody) return;
-    if (coverageEl && data.coverage) coverageEl.textContent = data.coverage;
+    const coverageIndicator = document.getElementById('programs-coverage-indicator');
+
+    if (!sectionContainer || !tbody) {
+        console.warn('⚠️ updatePrograms: Section not found in DOM');
+        return;
+    }
+
+    if (!data || !data.programs || Object.keys(data.programs).length === 0) {
+        sectionContainer.style.display = 'none';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No programs found. Programs are created in QuickBooks as Classes.</td></tr>';
+        return;
+    }
+
+    sectionContainer.style.display = 'block';
+
+    if (coverageEl) {
+        coverageEl.textContent = data.coverage || 'Partial';
+    }
+    if (coverageIndicator) {
+        const isHighCoverage = String(data.coverage || '').toLowerCase() === 'full';
+        coverageIndicator.textContent = isHighCoverage ? '✅' : '⚠️';
+        coverageIndicator.style.color = isHighCoverage ? '#10b981' : '#f59e0b';
+    }
+
+    const programsEntries = Object.entries(data.programs);
+    const programsWithData = programsEntries.filter(([_, program]) => {
+        const revenue = parseFloat(program.revenue || 0);
+        const expenses = parseFloat(program.expenses || 0);
+        return revenue !== 0 || expenses !== 0;
+    });
+    const programsToShow = (programsWithData.length > 0 ? programsWithData : programsEntries).sort(
+        (a, b) => parseFloat(b[1].revenue || 0) - parseFloat(a[1].revenue || 0)
+    );
+
     tbody.innerHTML = '';
-    const programs = data.programs ? Object.entries(data.programs) : [];
-    if (programs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No programs found. Programs are created in QuickBooks as Classes.</td></tr>';
-        return;
-    }
-    const programsWithData = programs.filter(([name, data]) => (data.revenue || 0) > 0 || (data.expenses || 0) > 0);
-    const programsToShow = programsWithData.length > 0 ? programs : programs.slice(0, 20);
-    if (programsToShow.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No programs found. Programs are created in QuickBooks as Classes.</td></tr>';
-        return;
-    }
-    programsToShow.forEach(([programName, programData], index) => {
-        const row = document.createElement('tr');
-        row.style.cssText = `border-bottom: 1px solid var(--border-color);`;
-        if (index % 2 === 0) row.style.backgroundColor = 'var(--bg-secondary)';
-        const netIncome = programData.net_income || 0;
-        const profitMargin = programData.profit_margin || 0;
-        const netColor = netIncome >= 0 ? '#10b981' : '#dc2626';
-        const marginColor = profitMargin >= 0 ? '#10b981' : '#dc2626';
+
+    programsToShow.forEach(([programName, programData]) => {
         const revenue = parseFloat(programData.revenue || 0);
         const expenses = parseFloat(programData.expenses || 0);
-        const hasData = revenue > 0 || expenses > 0;
-        const revenueColor = hasData ? 'var(--text-primary)' : '#9ca3af';
-        const expensesColor = hasData ? 'var(--text-primary)' : '#9ca3af';
-        row.innerHTML = `<td style="padding: 0.75rem; font-weight: 500; color: ${hasData ? 'var(--text-primary)' : '#9ca3af'};">${escapeHtml(programName)}</td><td style="padding: 0.75rem; text-align: right; color: ${revenueColor};">$${revenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td><td style="padding: 0.75rem; text-align: right; color: ${expensesColor};">$${expenses.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td><td style="padding: 0.75rem; text-align: right; font-weight: 600; color: ${netColor};">$${parseFloat(netIncome).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td><td style="padding: 0.75rem; text-align: right; font-weight: 600; color: ${marginColor};">${profitMargin.toFixed(1)}%</td>`;
+        const netIncome = programData.net_income !== undefined ? parseFloat(programData.net_income || 0) : (revenue - expenses);
+        const profitMargin = programData.profit_margin !== undefined
+            ? parseFloat(programData.profit_margin || 0)
+            : (revenue !== 0 ? (netIncome / revenue) * 100 : 0);
+        const hasData = revenue !== 0 || expenses !== 0;
+
+        const row = document.createElement('tr');
+        row.style.borderBottom = '1px solid #e5e7eb';
+        row.innerHTML = `
+            <td style="padding: 12px; font-weight: 500; color: ${hasData ? 'var(--text-primary)' : '#9ca3af'};">${escapeHtml(programName)}</td>
+            <td style="padding: 12px; text-align: right; font-weight: 500; color: #10b981;">${formatCurrency(revenue)}</td>
+            <td style="padding: 12px; text-align: right; font-weight: 500; color: #ef4444;">${formatCurrency(expenses)}</td>
+            <td style="padding: 12px; text-align: right; font-weight: 500; color: ${netIncome >= 0 ? '#10b981' : '#ef4444'};">${formatCurrency(netIncome)}</td>
+            <td style="padding: 12px; text-align: right; color: var(--text-secondary);">${isNaN(profitMargin) ? '—' : `${profitMargin.toFixed(2)}%`}</td>
+        `;
         tbody.appendChild(row);
     });
 }
 
-function updateTopDonors(data) {
-    const sectionContainer = document.getElementById('top-donors-section-container');
+function updateExpensesByAccount(data) {
+    if (!data || !data.accounts) {
+        console.warn('⚠️ updateExpensesByAccount: Missing data or data.accounts', data);
+        return;
+    }
+    const sectionContainer = document.getElementById('revenue-expenses-section-container');
     if (sectionContainer) sectionContainer.style.display = 'block';
-    if (!data || !data.donors) {
-        const tbody = document.getElementById('top-donors-tbody');
-        if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No donor data available</td></tr>';
-        return;
+    
+    const tbody = document.getElementById('expenses-by-account-tbody');
+    const tfoot = document.getElementById('expenses-by-account-tfoot');
+    const totalCell = document.getElementById('expenses-by-account-total');
+    
+    // Get total expenses for percentage calculations
+    const totalExpenses = data.total_expenses || data.accounts.reduce((sum, account) => sum + (account.total || 0), 0);
+    
+    if (tbody) {
+        tbody.innerHTML = '';
+        
+        // Sort accounts by total (descending)
+        const sortedAccounts = [...data.accounts].sort((a, b) => (b.total || 0) - (a.total || 0));
+        
+        // Render each account as a row
+        sortedAccounts.forEach((account) => {
+            const percentage = account.percentage || (totalExpenses > 0 ? ((account.total || 0) / totalExpenses * 100) : 0);
+            const row = document.createElement('tr');
+            row.style.borderBottom = '1px solid #e5e7eb';
+            row.innerHTML = `
+                <td style="padding: 12px;">${escapeHtml(account.account_name || 'N/A')}</td>
+                <td style="padding: 12px; text-align: right; font-weight: 500; color: #ef4444;">$${Math.round(account.total || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                <td style="padding: 12px; text-align: right; color: var(--text-secondary);">${account.count || 0}</td>
+                <td style="padding: 12px; text-align: right; color: var(--text-secondary);">${percentage.toFixed(1)}%</td>
+            `;
+            tbody.appendChild(row);
+        });
     }
-    const tbody = document.getElementById('top-donors-tbody');
-    const coverageEl = document.getElementById('donor-coverage');
-    const coverageDetailsEl = document.getElementById('donor-coverage-details');
-    if (!tbody) return;
-    if (coverageEl && data.coverage) coverageEl.textContent = data.coverage;
-    if (coverageDetailsEl && data.coverage_details) {
-        const details = data.coverage_details;
-        coverageDetailsEl.textContent = `${details.donations_with_contact.toLocaleString()} of ${details.total_donations.toLocaleString()} donations`;
+    
+    // Calculate total expenses from accounts
+    if (tfoot && totalCell && totalExpenses > 0) {
+        tfoot.style.display = 'table-footer-group';
+        totalCell.textContent = `$${Math.round(totalExpenses).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
     }
-    tbody.innerHTML = '';
-    if (data.donors.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No donor data available</td></tr>';
-        return;
-    }
-    data.donors.forEach((donor, index) => {
-        const row = document.createElement('tr');
-        row.style.cssText = `border-bottom: 1px solid var(--border-color);`;
-        if (index % 2 === 0) row.style.backgroundColor = 'var(--bg-secondary)';
-        const lastDonation = donor.last_donation ? new Date(donor.last_donation).toLocaleDateString() : '—';
-        const donorName = donor.name && donor.name.trim() ? escapeHtml(donor.name) : `Anonymous ${index + 1}`;
-        row.innerHTML = `<td style="padding: 0.75rem; font-weight: 500; color: var(--text-primary);">${donorName}</td><td style="padding: 0.75rem; text-align: right; font-weight: 600; color: #1a472a;">$${parseFloat(donor.total_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td><td style="padding: 0.75rem; text-align: center; color: var(--text-primary);">${donor.donation_count || 0}</td><td style="padding: 0.75rem; text-align: right; color: var(--text-secondary);">$${parseFloat(donor.avg_donation || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td><td style="padding: 0.75rem; text-align: center; color: var(--text-secondary); font-size: 0.9rem;">${lastDonation}</td>`;
-        tbody.appendChild(row);
-    });
 }
 
-function updateFunds(data) {
-    const sectionContainer = document.getElementById('funds-section-container');
-    if (sectionContainer) {
-        sectionContainer.style.display = 'block';
-    } else {
-        return;
-    }
-    if (!data) {
-        const tbody = document.getElementById('funds-tbody');
-        if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No fund data available</td></tr>';
-        return;
-    }
-    const tbody = document.getElementById('funds-tbody');
-    if (!tbody) return;
-    const coverageEl = document.getElementById('funds-coverage');
-    const coverageDetailsEl = document.getElementById('funds-coverage-details');
-    if (coverageEl) {
-        if (data.coverage && data.coverage.includes('fund_id not populated')) {
-            coverageEl.textContent = 'No Data';
-        } else {
-            coverageEl.textContent = data.coverage || 'Partial';
-        }
-    }
-    if (coverageDetailsEl && data.coverage) coverageDetailsEl.textContent = data.coverage;
-    tbody.innerHTML = '';
-    const funds = data.funds ? Object.entries(data.funds) : [];
-    if (funds.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No funds found. Funds are created in Aplos.</td></tr>';
-        return;
-    }
-    funds.forEach(([fundName, fundData], index) => {
-        const row = document.createElement('tr');
-        row.style.cssText = `border-bottom: 1px solid var(--border-color);`;
-        if (index % 2 === 0) row.style.backgroundColor = 'var(--bg-secondary)';
-        const netIncome = fundData.net_income || 0;
-        const profitMargin = fundData.profit_margin || 0;
-        const netColor = netIncome >= 0 ? '#10b981' : '#dc2626';
-        const marginColor = profitMargin >= 0 ? '#10b981' : '#dc2626';
-        const revenue = parseFloat(fundData.revenue || 0);
-        const expenses = parseFloat(fundData.expenses || 0);
-        const hasData = revenue > 0 || expenses > 0;
-        const fundType = fundData.fund_type || 'Unrestricted';
-        let typeColor = '#6b7280';
-        if (fundType.includes('Restricted')) typeColor = '#f59e0b';
-        else if (fundType.includes('Unrestricted')) typeColor = '#10b981';
-        const noDataMessage = !hasData ? ' (fund exists but cannot be linked to donations/transactions)' : '';
-        row.innerHTML = `<td style="padding: 0.75rem; font-weight: 500; color: ${hasData ? 'var(--text-primary)' : '#9ca3af'};">${escapeHtml(fundName)}${noDataMessage ? `<span style="font-size: 0.75rem; font-weight: normal; color: #6b7280; display: block; margin-top: 0.25rem;">${noDataMessage}</span>` : ''}</td><td style="padding: 0.75rem; color: ${typeColor}; font-size: 0.9rem;">${escapeHtml(fundType)}</td><td style="padding: 0.75rem; text-align: right; color: ${hasData ? 'var(--text-primary)' : '#9ca3af'};">$${revenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td><td style="padding: 0.75rem; text-align: right; color: ${hasData ? 'var(--text-primary)' : '#9ca3af'};">$${expenses.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td><td style="padding: 0.75rem; text-align: right; font-weight: 600; color: ${netColor};">$${parseFloat(netIncome).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td><td style="padding: 0.75rem; text-align: right; font-weight: 600; color: ${marginColor};">${profitMargin.toFixed(1)}%</td>`;
-        tbody.appendChild(row);
-    });
-}
 
 // Password protection for dashboard
 const DASHBOARD_PASSWORD = 'maps2024'; // Change this to your desired password
@@ -3882,6 +4452,12 @@ async function initializeDashboard() {
         
         console.log('📊 Loading initial data for time range:', defaultTimeRange);
         
+        // Clear CremaClient in-memory cache to force fresh data load
+        if (typeof crema !== 'undefined' && crema._cache) {
+            crema._cache.clear();
+            console.log('🔄 Cleared in-memory cache to force fresh data load');
+        }
+        
         // Load Crema data and metrics in parallel
         await Promise.all([
             fetchCremaData(),
@@ -3889,25 +4465,6 @@ async function initializeDashboard() {
         ]);
         
         console.log('✅ Initial data loaded');
-        
-        // Ensure funds section is visible (fallback in case data loading fails)
-        setTimeout(() => {
-            const fundsSection = document.getElementById('funds-section-container');
-            if (fundsSection && fundsSection.style.display === 'none') {
-                console.log('💰 Ensuring funds section is visible (fallback)');
-                fundsSection.style.display = 'block';
-                // Try to load funds data if not already loaded
-                const tbody = document.getElementById('funds-tbody');
-                if (tbody && tbody.innerHTML.includes('Loading...')) {
-                    // Data might still be loading, check again in a moment
-                    setTimeout(() => {
-                        if (tbody.innerHTML.includes('Loading...')) {
-                            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading fund data...</td></tr>';
-                        }
-                    }, 2000);
-                }
-            }
-        }, 1000);
         
         // Auto-refresh disabled per user request
         // Refresh data periodically (parallelize for performance)
