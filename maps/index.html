@@ -4331,15 +4331,38 @@ function updateExpensesByAccount(data) {
 
 
 // Password protection for dashboard
-// Use same password as encryption (LoveAllah) for consistency
-const DASHBOARD_PASSWORD = 'LoveAllah';
+// Password is loaded from secure config at runtime (not hardcoded)
+// For static deployment, password is injected during build from secure source
+let DASHBOARD_PASSWORD = null;
+
+// Load password from secure source (injected at build time from GitHub Secrets)
+async function loadDashboardPassword() {
+    if (DASHBOARD_PASSWORD) {
+        return DASHBOARD_PASSWORD;
+    }
+    
+    // Password is injected by build process from GitHub Secrets
+    // Format: window.DASHBOARD_PASSWORD_ENV = 'password';
+    const envPassword = window.DASHBOARD_PASSWORD_ENV;
+    if (envPassword) {
+        DASHBOARD_PASSWORD = envPassword;
+        return DASHBOARD_PASSWORD;
+    }
+    
+    // Fallback: password not configured (should not happen in production)
+    console.error('❌ Dashboard password not configured');
+    throw new Error('Dashboard password not configured. Please contact administrator.');
+}
 
 async function checkPassword() {
     // Always prompt for password (no persistence)
+    // Load password from secure source
+    const expectedPassword = await loadDashboardPassword();
+    
     // Use custom password dialog (from decrypt.js)
     if (typeof showPasswordDialog === 'function') {
         const password = await showPasswordDialog();
-        if (password === DASHBOARD_PASSWORD) {
+        if (password === expectedPassword) {
             // Don't persist - password will be asked again next time
             return true;
         } else if (password !== null) {
@@ -4349,7 +4372,7 @@ async function checkPassword() {
     } else {
         // Fallback to prompt if showPasswordDialog not available
         const password = prompt('Enter password to access dashboard:');
-        if (password === DASHBOARD_PASSWORD) {
+        if (password === expectedPassword) {
             // Don't persist - password will be asked again next time
             return true;
         } else if (password !== null) {
