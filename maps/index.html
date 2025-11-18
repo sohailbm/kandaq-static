@@ -4335,19 +4335,12 @@ function updateExpensesByAccount(data) {
 const DASHBOARD_PASSWORD = 'LoveAllah';
 
 async function checkPassword() {
-    // Check session storage first
-    const storedPassword = sessionStorage.getItem('dashboard_password_verified');
-    if (storedPassword === 'true') {
-        return true;
-    }
-    
+    // Always prompt for password (no persistence)
     // Use custom password dialog (from decrypt.js)
     if (typeof showPasswordDialog === 'function') {
         const password = await showPasswordDialog();
         if (password === DASHBOARD_PASSWORD) {
-            sessionStorage.setItem('dashboard_password_verified', 'true');
-            // Also store password for data decryption (reuse same password)
-            sessionStorage.setItem('dashboard_decryption_key', password);
+            // Don't persist - password will be asked again next time
             return true;
         } else if (password !== null) {
             alert('Incorrect password. Access denied.');
@@ -4357,9 +4350,7 @@ async function checkPassword() {
         // Fallback to prompt if showPasswordDialog not available
         const password = prompt('Enter password to access dashboard:');
         if (password === DASHBOARD_PASSWORD) {
-            sessionStorage.setItem('dashboard_password_verified', 'true');
-            // Also store password for data decryption (reuse same password)
-            sessionStorage.setItem('dashboard_decryption_key', password);
+            // Don't persist - password will be asked again next time
             return true;
         } else if (password !== null) {
             alert('Incorrect password. Access denied.');

@@ -328,12 +328,7 @@ function showPasswordDialog() {
  * Priority: 1) User input, 2) API token, 3) Session storage, 4) Password dialog
  */
 async function getDecryptionKey() {
-    // Try to get from session storage (if user already entered password)
-    const storedKey = sessionStorage.getItem('dashboard_decryption_key');
-    if (storedKey) {
-        return storedKey;
-    }
-    
+    // Don't persist password - always prompt
     // Try to get from API token (if authenticated)
     const apiToken = localStorage.getItem('api_token') || 
                      sessionStorage.getItem('api_token');
@@ -342,11 +337,10 @@ async function getDecryptionKey() {
         return apiToken;
     }
     
-    // Show password dialog
+    // Show password dialog (no persistence)
     const password = await showPasswordDialog();
     if (password) {
-        // Store in session (not localStorage for security)
-        sessionStorage.setItem('dashboard_decryption_key', password);
+        // Don't store - password will be asked again next time
         return password;
     }
     
