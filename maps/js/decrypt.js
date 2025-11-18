@@ -180,11 +180,12 @@ function showPasswordDialog() {
         dialog.style.cssText = `
             background: #FFFFFF;
             border-radius: 12px;
-            padding: 32px;
-            max-width: 400px;
+            padding: 0;
+            max-width: 450px;
             width: 90%;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             animation: fadeIn 0.2s ease-out;
+            overflow: hidden;
         `;
         
         // Add fade-in animation
@@ -197,47 +198,132 @@ function showPasswordDialog() {
         `;
         document.head.appendChild(style);
         
+        // Create header with Kandaq branding
+        const header = document.createElement('div');
+        header.style.cssText = `
+            background: linear-gradient(135deg, #A51D35 0%, #8B1A2E 100%);
+            padding: 24px 32px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            color: #FFFFFF;
+        `;
+        
+        // Create security icon
+        const securityIcon = document.createElement('div');
+        securityIcon.innerHTML = '<i class="fas fa-shield-alt" style="font-size: 32px; color: #FFFFFF;"></i>';
+        securityIcon.style.cssText = `
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 56px;
+            height: 56px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            flex-shrink: 0;
+        `;
+        
+        // Create header text container
+        const headerText = document.createElement('div');
+        headerText.style.cssText = `
+            flex: 1;
+        `;
+        
+        // Create Kandaq brand name
+        const brandName = document.createElement('div');
+        brandName.textContent = 'Kandaq';
+        brandName.style.cssText = `
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            letter-spacing: 0.5px;
+        `;
+        
+        // Create subtitle
+        const subtitle = document.createElement('div');
+        subtitle.textContent = 'Secure Data Access';
+        subtitle.style.cssText = `
+            font-size: 13px;
+            opacity: 0.9;
+            font-weight: 400;
+        `;
+        
+        headerText.appendChild(brandName);
+        headerText.appendChild(subtitle);
+        header.appendChild(securityIcon);
+        header.appendChild(headerText);
+        
+        // Create content container
+        const content = document.createElement('div');
+        content.style.cssText = `
+            padding: 32px;
+        `;
+        
         // Create title
         const title = document.createElement('h2');
-        title.textContent = '🔐 Decryption Required';
+        title.textContent = 'Decryption Required';
         title.style.cssText = `
-            margin: 0 0 16px 0;
+            margin: 0 0 12px 0;
             color: #111827;
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 600;
         `;
         
         // Create description
         const desc = document.createElement('p');
-        desc.textContent = 'Enter password to decrypt dashboard data:';
+        desc.textContent = 'Enter your password to decrypt and access the dashboard data.';
         desc.style.cssText = `
             margin: 0 0 24px 0;
             color: #6B7280;
             font-size: 14px;
+            line-height: 1.5;
         `;
         
-        // Create password input
+        // Create password input with icon
+        const inputWrapper = document.createElement('div');
+        inputWrapper.style.cssText = `
+            position: relative;
+            margin-bottom: 24px;
+        `;
+        
+        const inputIcon = document.createElement('div');
+        inputIcon.innerHTML = '<i class="fas fa-lock" style="color: #9CA3AF;"></i>';
+        inputIcon.style.cssText = `
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            z-index: 1;
+        `;
+        
         const input = document.createElement('input');
         input.type = 'password';
         input.placeholder = 'Enter password';
         input.autocomplete = 'current-password';
         input.style.cssText = `
             width: 100%;
-            padding: 12px 16px;
+            padding: 12px 16px 12px 48px;
             border: 2px solid #E5E7EB;
             border-radius: 8px;
             font-size: 16px;
             font-family: Poppins, sans-serif;
-            margin-bottom: 24px;
             box-sizing: border-box;
-            transition: border-color 0.2s;
+            transition: all 0.2s;
         `;
         input.addEventListener('focus', () => {
             input.style.borderColor = '#A51D35';
+            input.style.boxShadow = '0 0 0 3px rgba(165, 29, 53, 0.1)';
+            inputIcon.innerHTML = '<i class="fas fa-lock" style="color: #A51D35;"></i>';
         });
         input.addEventListener('blur', () => {
             input.style.borderColor = '#E5E7EB';
+            input.style.boxShadow = 'none';
+            inputIcon.innerHTML = '<i class="fas fa-lock" style="color: #9CA3AF;"></i>';
         });
+        
+        inputWrapper.appendChild(inputIcon);
+        inputWrapper.appendChild(input);
         
         // Create button container
         const buttonContainer = document.createElement('div');
@@ -332,10 +418,12 @@ function showPasswordDialog() {
         // Assemble dialog
         buttonContainer.appendChild(cancelBtn);
         buttonContainer.appendChild(submitBtn);
-        dialog.appendChild(title);
-        dialog.appendChild(desc);
-        dialog.appendChild(input);
-        dialog.appendChild(buttonContainer);
+        content.appendChild(title);
+        content.appendChild(desc);
+        content.appendChild(inputWrapper);
+        content.appendChild(buttonContainer);
+        dialog.appendChild(header);
+        dialog.appendChild(content);
         overlay.appendChild(dialog);
         
         // Add to page
