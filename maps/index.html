@@ -2212,7 +2212,7 @@ let ENTITY_SCHEMAS = {};
 
 // Build entity schemas from Crema data
 function buildEntitySchemasFromCrema(cremaData) {
-    if (!cremaData || !cremaData.data_types) return;
+    if (!cremaData || !cremaData.data_types || !Array.isArray(cremaData.data_types)) return;
     
     // Default exclude fields (system fields that should not be displayed)
     const defaultExcludeFields = ['business_id', 'source', 'source_system', 'created_at', 'updated_at', 'timestamp'];
