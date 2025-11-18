@@ -3321,7 +3321,7 @@ document.addEventListener('click', async (e) => {
     // Category card handlers removed - file types (image, video, document, etc.) are now entity types
     // They appear in the entity tiles section and use searchEntity() instead
     
-    // Search functionality moved to business-data.html
+    // Search functionality moved to find-data.html
 });
 
 // Global search function - static mode (not available)
@@ -3331,7 +3331,7 @@ async function searchGlobal(query) {
 
 // Handle Enter key in search input
 document.addEventListener('DOMContentLoaded', () => {
-    // Search functionality moved to business-data.html
+    // Search functionality moved to find-data.html
     
     // Time range selector
     const timeRangeSelect = document.getElementById('time-range-select');
@@ -4495,7 +4495,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function initializeDashboard() {
-    // Check if there's a search parameter in the URL (from business-data.html tile clicks)
+    // Check if there's a search parameter in the URL (from find-data.html tile clicks)
     const urlParams = new URLSearchParams(window.location.search);
     const searchEntityType = urlParams.get('search');
     if (searchEntityType) {

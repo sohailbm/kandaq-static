@@ -10,7 +10,7 @@ This directory contains manually developed dashboard files for the MAPS tenant. 
 ## File Structure
 
 - `index.html` - Main dashboard with board analyses, financial health metrics, revenue by source, and top donors
-- `business-data.html` - Business data discovery page (moved from main dashboard)
+- `find-data.html` - Find Data page (moved from main dashboard)
 
 ## Development Workflow
 
@@ -31,7 +31,7 @@ This ensures manual development work takes precedence over auto-generated files.
 
 When ready to merge development work into the app generator:
 
-1. Review customizations in `static/index.html` and `static/business-data.html`
+1. Review customizations in `static/index.html` and `static/find-data.html`
 2. Identify reusable patterns and components
 3. Update app generator templates in `components/app-generator/templates/`
 4. Update business type schemas if needed
@@ -45,9 +45,9 @@ When ready to merge development work into the app generator:
 - Revenue by Source (Donations, Grants, Sales, Other Income)
 - Top Donors (Top 20 by total contribution)
 
-### Business Data Page
-- Separate page for entity discovery
-- Navigation between dashboard and business data
+### Find Data Page
+- Separate page for entity discovery and search
+- Navigation between dashboard and find-data
 
 ### Time Range Integration
 - Board analyses respect UI time range selection
