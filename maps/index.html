@@ -291,6 +291,81 @@ body {
     gap: calc(16px * 1.5);
 }
 
+/* Dashboard Section Styling */
+.dashboard-section {
+    margin-bottom: 2rem;
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.section-heading {
+    font-size: 1.25em;
+    margin: 0 0 1rem 0;
+    color: var(--text-primary);
+    font-weight: 600;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 0.75rem;
+}
+
+/* Table Styling */
+.dashboard-section table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.dashboard-section table thead tr {
+    background: #f9fafb;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.dashboard-section table th {
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.dashboard-section table th[style*="text-align: right"] {
+    text-align: right;
+}
+
+.dashboard-section table tbody tr {
+    border-bottom: 1px solid #e5e7eb;
+    transition: background-color 0.2s ease;
+}
+
+.dashboard-section table tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+.dashboard-section table tbody td {
+    padding: 12px;
+    color: var(--text-primary);
+    font-size: 0.9375rem;
+}
+
+.dashboard-section table tbody td[style*="text-align: right"] {
+    text-align: right;
+}
+
+.dashboard-section table tfoot {
+    background: #f9fafb;
+    border-top: 2px solid #e5e7eb;
+    font-weight: 600;
+}
+
+.dashboard-section table tfoot td {
+    padding: 12px;
+}
+
 /* Metrics Section */
 .metrics-section {
     margin-bottom: calc(16px * 1.5);
@@ -1032,155 +1107,120 @@ body {
         </section>
         
         <!-- Board Analyses Sections (moved up for better visibility) -->
-        <!-- Revenue by Source and Expenses by Category Side by Side -->
-        <section id="revenue-expenses-section-container" style="margin-bottom: 1rem; display: none;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start;">
-                <!-- Revenue by Account -->
-                <div id="revenue-by-account-section" style="margin-bottom: 0;">
-                    <h3 style="font-size: 1.25em; margin-bottom: 0.75rem; color: var(--text-primary);">Revenue by Account</h3>
-                    <div style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;">
-                            <thead>
-                                <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
-                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--text-primary);">Account</th>
-                                    <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Total</th>
-                                    <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Count</th>
-                                    <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Percentage</th>
-                                </tr>
-                            </thead>
-                            <tbody id="revenue-accounts-tbody">
-                                <tr><td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading...</td></tr>
-                            </tbody>
-                            <tfoot id="revenue-accounts-tfoot" style="display: none;">
-                                <tr style="background: #f9fafb; border-top: 2px solid #e5e7eb; font-weight: 600;">
-                                    <td colspan="1" style="padding: 12px; text-align: right;">Total Revenue:</td>
-                                    <td id="revenue-accounts-total" style="padding: 12px; text-align: right; color: #10b981;"></td>
-                                    <td style="padding: 12px;"></td>
-                                    <td style="padding: 12px;"></td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                    <div id="revenue-sources-top-donors" style="margin-top: 1rem;">
-                        <!-- Top donors will be populated here -->
-                    </div>
-                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
-                        <span style="color: #10b981;">✅</span> 100% Confidence - Business concepts (not source systems)
-                    </p>
-                </div>
         
-        <!-- Expenses by Account -->
-            <div id="expenses-by-account-section" style="margin-bottom: 0;">
-                <h3 style="font-size: 1.25em; margin-bottom: 0.75rem; color: var(--text-primary);">Expenses by Account</h3>
-                    <div style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;">
-                            <thead>
-                                <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
-                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--text-primary);">Account</th>
-                                    <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Total</th>
-                                    <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Count</th>
-                                    <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Percentage</th>
-                                </tr>
-                            </thead>
-                            <tbody id="expenses-by-account-tbody">
-                                <tr><td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading...</td></tr>
-                            </tbody>
-                            <tfoot id="expenses-by-account-tfoot" style="display: none;">
-                                <tr style="background: #f9fafb; border-top: 2px solid #e5e7eb; font-weight: 600;">
-                                    <td colspan="1" style="padding: 12px; text-align: right;">Total Expenses:</td>
-                                    <td id="expenses-by-account-total" style="padding: 12px; text-align: right; color: #ef4444;"></td>
-                                    <td style="padding: 12px;"></td>
-                                    <td style="padding: 12px;"></td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                </div>
-                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
-                    <span style="color: #10b981;">✅</span> 100% Confidence - Business category analysis
-                </p>
-                </div>
-            </div>
-        </section>
-        
-        <!-- Account Totals - Revenue and Expenses Side by Side -->
-        <section id="account-totals-section-container" style="margin-bottom: 1rem; display: none;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start;">
+        <!-- Account Totals - Revenue and Expenses Stacked Vertically -->
+        <section id="account-totals-section-container" class="dashboard-section" style="display: none;">
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
                 <!-- Income Accounts -->
-            <div id="account-totals-income-section" style="margin-bottom: 0;">
-                <h3 style="font-size: 1.25em; margin-bottom: 0.75rem; color: var(--text-primary);">Income Accounts</h3>
+            <div id="account-totals-income-section">
+                <h3 class="section-heading">Income Accounts</h3>
                 <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;">
+                    <table>
                         <thead>
-                            <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
-                                <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--text-primary);">Account Name</th>
-                                <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--text-primary);">Type</th>
-                                <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Total</th>
-                                <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Count</th>
+                            <tr>
+                                <th>Account Name</th>
+                                <th>Type</th>
+                                <th style="text-align: right;">Total</th>
+                                <th style="text-align: right;">Count</th>
                             </tr>
                         </thead>
                         <tbody id="income-accounts-tbody">
                             <tr><td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading...</td></tr>
                         </tbody>
                         <tfoot id="income-accounts-tfoot" style="display: none;">
-                            <tr style="background: #f9fafb; border-top: 2px solid #e5e7eb; font-weight: 600;">
-                                <td colspan="2" style="padding: 12px; text-align: right;">Total Income:</td>
-                                <td id="income-accounts-total" style="padding: 12px; text-align: right; color: #10b981;"></td>
-                                <td style="padding: 12px;"></td>
+                            <tr>
+                                <td colspan="2" style="text-align: right;">Total Income:</td>
+                                <td id="income-accounts-total" style="text-align: right; color: #10b981;"></td>
+                                <td></td>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
             </div>
-        
+            
                 <!-- Expense Accounts -->
-            <div id="account-totals-expense-section" style="margin-bottom: 0;">
-                <h3 style="font-size: 1.25em; margin-bottom: 0.75rem; color: var(--text-primary);">Expense Accounts</h3>
+            <div id="account-totals-expense-section">
+                <h3 class="section-heading">Expense Accounts</h3>
                 <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;">
+                    <table>
                         <thead>
-                            <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
-                                <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--text-primary);">Account Name</th>
-                                <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--text-primary);">Type</th>
-                                <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Total</th>
-                                <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Count</th>
+                            <tr>
+                                <th>Account Name</th>
+                                <th>Type</th>
+                                <th style="text-align: right;">Total</th>
+                                <th style="text-align: right;">Count</th>
                             </tr>
                         </thead>
                         <tbody id="expense-accounts-tbody">
                             <tr><td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading...</td></tr>
                         </tbody>
                         <tfoot id="expense-accounts-tfoot" style="display: none;">
-                            <tr style="background: #f9fafb; border-top: 2px solid #e5e7eb; font-weight: 600;">
-                                <td colspan="2" style="padding: 12px; text-align: right;">Total Expense:</td>
-                                <td id="expense-accounts-total" style="padding: 12px; text-align: right; color: #ef4444;"></td>
-                                <td style="padding: 12px;"></td>
+                            <tr>
+                                <td colspan="2" style="text-align: right;">Total Expense:</td>
+                                <td id="expense-accounts-total" style="text-align: right; color: #ef4444;"></td>
+                                <td></td>
                             </tr>
                         </tfoot>
                     </table>
-                    </div>
                 </div>
             </div>
         </section>
         
         <!-- Donation Insights Section -->
-        <section id="donation-insights-section-container" style="margin-bottom: 1rem; display: none;">
+        <section id="donation-insights-section-container" class="dashboard-section" style="display: none;">
             <div id="donation-insights-content">
                 <!-- Content will be populated by JavaScript -->
             </div>
         </section>
+        
+        <!-- Top Donors Section -->
+        <section id="top-donors-section-container" class="dashboard-section" style="display: none;">
+            <div id="top-donors-section">
+                <h3 class="section-heading">Top Donors</h3>
+                <div style="margin-bottom: 0.75rem; padding: 0.75rem; background: #f9fafb; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                        <div>
+                            <span style="font-size: 0.875rem; color: var(--text-secondary);">Coverage: </span>
+                            <span id="donor-coverage" style="font-weight: 600; color: var(--text-primary);">—</span>
+                        </div>
+                        <div>
+                            <span style="font-size: 0.875rem; color: var(--text-secondary);">Details: </span>
+                            <span id="donor-coverage-details" style="font-size: 0.875rem; color: var(--text-secondary);">—</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Donor Name</th>
+                                <th style="text-align: right;">Total Amount</th>
+                                <th style="text-align: right;">Donations</th>
+                                <th style="text-align: right;">Avg Amount</th>
+                                <th style="text-align: right;">Last Donation</th>
+                            </tr>
+                        </thead>
+                        <tbody id="top-donors-tbody">
+                            <tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
 
         <!-- Programs Section -->
-        <section id="programs-section-container" style="margin-bottom: 1rem; display: none;">
-            <div id="programs-section" style="margin-bottom: 0;">
-                <h3 style="font-size: 1.25em; margin-bottom: 0.75rem; color: var(--text-primary);">Programs</h3>
+        <section id="programs-section-container" class="dashboard-section" style="display: none;">
+            <div id="programs-section">
+                <h3 class="section-heading">Programs</h3>
                 <div id="programs-list" style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;">
+                    <table>
                         <thead>
-                            <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
-                                <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--text-primary);">Program</th>
-                                <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Revenue</th>
-                                <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Expenses</th>
-                                <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Net Income</th>
-                                <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--text-primary);">Profit Margin</th>
+                            <tr>
+                                <th>Program</th>
+                                <th style="text-align: right;">Revenue</th>
+                                <th style="text-align: right;">Expenses</th>
+                                <th style="text-align: right;">Net Income</th>
+                                <th style="text-align: right;">Profit Margin</th>
                             </tr>
                         </thead>
                         <tbody id="programs-tbody">
@@ -3360,6 +3400,8 @@ async function fetchMetricsWithTimeRange(timeRange = 'this_year') {
         // In live mode, fetch both metrics and dashboard in parallel for better performance
         // In cache mode, use sequential loading from cache files
         let metrics, sourceTargets = {}, boardMetrics;
+        // Declare timeRangeData at function scope so it's accessible throughout
+        let timeRangeData = {};
         
         if (cremaMode === 'live') {
             // Parallelize API calls in live mode - both endpoints take ~20s, so parallel saves ~20s
@@ -3406,13 +3448,18 @@ async function fetchMetricsWithTimeRange(timeRange = 'this_year') {
             // For encrypted files, use loadDecryptedDashboard if available
             if (typeof loadDecryptedDashboard === 'function') {
                 try {
-                    console.log('📦 Loading from encrypted cache file...');
+                    console.log('📦 Loading from encrypted cache file for time range:', kandaqTimeRange);
                     const cacheData = await loadDecryptedDashboard(kandaqTimeRange);
                     // loadDecryptedDashboard returns: { metrics: { metrics: {...}, board_analyses: {...}, ... }, source_targets: {...} }
                     // The time range object has a nested 'metrics' property with the actual metric values
                     // and 'board_analyses' with board analysis data
-                    const timeRangeData = cacheData?.metrics || {};
+                    timeRangeData = cacheData?.metrics || {};
                     metrics = timeRangeData?.metrics || cacheData?.metrics?.metrics || cacheData?.metrics || cacheData?.data?.metrics;
+                    console.log('✅ Loaded metrics for', kandaqTimeRange, ':', {
+                        hasMetrics: !!metrics,
+                        revenue: metrics?.revenue_quickbooks || 0,
+                        expenses: metrics?.expenses_quickbooks || 0
+                    });
                     sourceTargets = cacheData?.source_targets || {};
                     // boardMetrics should include both metrics and board_analyses
                     // Check multiple possible locations for board analyses
@@ -3426,16 +3473,29 @@ async function fetchMetricsWithTimeRange(timeRange = 'this_year') {
                     const nonprofitKPIs = timeRangeData?.nonprofit_kpis || 
                                          metrics?.nonprofit_kpis ||
                                          {};
+                    // boardMetrics should include all metrics plus board analyses
+                    // Note: expenses_by_account and top_donors are added directly to metrics by board_analyses.py
+                    // So they should already be in metrics, but we merge boardAnalyses to be safe
                     boardMetrics = {
                         ...metrics,
                         ...boardAnalyses,
-                        nonprofit_kpis: nonprofitKPIs
+                        nonprofit_kpis: nonprofitKPIs,
+                        // Explicitly include top_donors from metrics if it exists
+                        top_donors: metrics?.top_donors || boardAnalyses?.top_donors
                     };
                     console.log('✅ Loaded metrics from encrypted cache successfully', {
                         hasMetrics: !!metrics,
                         metricsKeys: metrics ? Object.keys(metrics).slice(0, 5) : [],
                         hasBoardAnalyses: !!(timeRangeData?.board_analyses || timeRangeData?.boardAnalyses),
-                        boardAnalysesKeys: timeRangeData?.board_analyses ? Object.keys(timeRangeData.board_analyses).slice(0, 5) : []
+                        boardAnalysesKeys: timeRangeData?.board_analyses ? Object.keys(timeRangeData.board_analyses).slice(0, 10) : [],
+                        boardMetricsKeys: Object.keys(boardMetrics).slice(0, 30),
+                        hasTopDonors: !!boardMetrics?.top_donors,
+                        hasDonationInsights: !!boardMetrics?.nonprofit_kpis?.donation_insights,
+                        boardAnalysesFullKeys: Object.keys(boardAnalyses).slice(0, 20),
+                        nonprofitKPIsKeys: Object.keys(nonprofitKPIs).slice(0, 15),
+                        timeRangeDataKeys: Object.keys(timeRangeData).slice(0, 15),
+                        'timeRangeData.board_analyses keys': timeRangeData?.board_analyses ? Object.keys(timeRangeData.board_analyses).slice(0, 15) : [],
+                        'timeRangeData.nonprofit_kpis keys': timeRangeData?.nonprofit_kpis ? Object.keys(timeRangeData.nonprofit_kpis).slice(0, 15) : []
                     });
                 } catch (e) {
                     // If encryption fails, try CremaClient (for unencrypted files)
@@ -3487,26 +3547,16 @@ async function fetchMetricsWithTimeRange(timeRange = 'this_year') {
         // Process board analyses for nonprofits
         if (BUSINESS_TYPE === 'non_profit_organization') {
             
-            // Process board analyses - check both boardMetrics and metrics for data
-            const revenueByAccount = boardMetrics?.revenue_by_account || metrics?.revenue_by_account;
-            const expensesByAccount = boardMetrics?.expenses_by_account || metrics?.expenses_by_account;
+            // Process board analyses - check multiple locations for data
+            // The data structure from loadDecryptedDashboard is:
+            // { metrics: { metrics: {...}, board_analyses: {...}, nonprofit_kpis: {...} }, source_targets: {...} }
+            // After extraction: timeRangeData = cacheData.metrics (which is the time range object)
+            // boardMetrics = { ...metrics, ...boardAnalyses, nonprofit_kpis: nonprofitKPIs }
             
-            console.log('🔍 Revenue by Account data:', revenueByAccount ? 'Found' : 'Missing', revenueByAccount ? `${revenueByAccount.accounts?.length || 0} accounts` : '');
-            console.log('🔍 Expenses by Account data:', expensesByAccount ? 'Found' : 'Missing', expensesByAccount ? `${expensesByAccount.accounts?.length || 0} accounts` : '');
-            
-            if (revenueByAccount && typeof updateRevenueByAccount === 'function') {
-                console.log('✅ Calling updateRevenueByAccount');
-                updateRevenueByAccount(revenueByAccount);
-            } else {
-                console.warn('⚠️ Revenue by Account not updated:', { hasData: !!revenueByAccount, hasFunction: typeof updateRevenueByAccount === 'function' });
-            }
-            // Update expense displays
-            if (expensesByAccount && typeof updateExpensesByAccount === 'function') {
-                console.log('✅ Calling updateExpensesByAccount');
-                updateExpensesByAccount(expensesByAccount);
-            } else {
-                console.warn('⚠️ Expenses by Account not updated:', { hasData: !!expensesByAccount, hasFunction: typeof updateExpensesByAccount === 'function' });
-            }
+            // Check boardMetrics first (it already has boardAnalyses merged in)
+            // Then check timeRangeData.board_analyses directly
+            // Then check metrics as fallback
+            const boardAnalysesData = timeRangeData?.board_analyses || timeRangeData?.boardAnalyses || boardMetrics?.board_analyses || {};
             // Update account totals
             if (boardMetrics?.account_totals && typeof updateAccountTotals === 'function') {
                 updateAccountTotals(boardMetrics.account_totals);
@@ -3514,10 +3564,25 @@ async function fetchMetricsWithTimeRange(timeRange = 'this_year') {
             
             // Update donation insights (frequency patterns and monthly patterns)
             // Check multiple locations for nonprofit_kpis
-            const donationInsights = boardMetrics?.nonprofit_kpis?.donation_insights || 
-                                   metrics?.nonprofit_kpis?.donation_insights ||
-                                   timeRangeData?.nonprofit_kpis?.donation_insights ||
-                                   null;
+            // nonprofit_kpis is merged into boardMetrics, so check there first
+            const nonprofitKPIsData = boardMetrics?.nonprofit_kpis || 
+                                     timeRangeData?.nonprofit_kpis ||
+                                     metrics?.nonprofit_kpis ||
+                                     {};
+            const donationInsights = nonprofitKPIsData?.donation_insights || null;
+            
+            console.log('🔍 Checking donation_insights in:', {
+                'boardMetrics.nonprofit_kpis': !!boardMetrics?.nonprofit_kpis,
+                'boardMetrics.nonprofit_kpis.donation_insights': !!boardMetrics?.nonprofit_kpis?.donation_insights,
+                'timeRangeData.nonprofit_kpis': !!timeRangeData?.nonprofit_kpis,
+                'timeRangeData.nonprofit_kpis.donation_insights': !!timeRangeData?.nonprofit_kpis?.donation_insights,
+                'metrics.nonprofit_kpis': !!metrics?.nonprofit_kpis,
+                'metrics.nonprofit_kpis.donation_insights': !!metrics?.nonprofit_kpis?.donation_insights,
+                'nonprofitKPIsData': !!nonprofitKPIsData,
+                'nonprofitKPIsData.donation_insights': !!nonprofitKPIsData?.donation_insights,
+                'nonprofitKPIsDataKeys': Object.keys(nonprofitKPIsData).slice(0, 10)
+            });
+            
             if (donationInsights && typeof updateDonationInsights === 'function') {
                 console.log('✅ Calling updateDonationInsights');
                 updateDonationInsights(donationInsights);
@@ -3536,7 +3601,7 @@ async function fetchMetricsWithTimeRange(timeRange = 'this_year') {
                             metrics?.donor_analysis ||
                             boardMetrics?.nonprofit_kpis?.top_donors ||
                             metrics?.nonprofit_kpis?.top_donors ||
-                            timeRangeData?.nonprofit_kpis?.top_donors ||
+                            (timeRangeData && timeRangeData.nonprofit_kpis?.top_donors) ||
                             null;
             if (topDonors && typeof updateTopDonors === 'function') {
                 console.log('✅ Calling updateTopDonors');
@@ -3553,10 +3618,10 @@ async function fetchMetricsWithTimeRange(timeRange = 'this_year') {
             console.log('📊 Nonprofit KPIs structure:', {
                 hasBoardMetricsKPIs: !!boardMetrics?.nonprofit_kpis,
                 hasMetricsKPIs: !!metrics?.nonprofit_kpis,
-                hasTimeRangeKPIs: !!timeRangeData?.nonprofit_kpis,
+                hasTimeRangeKPIs: !!(timeRangeData && timeRangeData.nonprofit_kpis),
                 boardMetricsKPIsKeys: boardMetrics?.nonprofit_kpis ? Object.keys(boardMetrics.nonprofit_kpis).slice(0, 10) : [],
                 metricsKPIsKeys: metrics?.nonprofit_kpis ? Object.keys(metrics.nonprofit_kpis).slice(0, 10) : [],
-                timeRangeKPIsKeys: timeRangeData?.nonprofit_kpis ? Object.keys(timeRangeData.nonprofit_kpis).slice(0, 10) : []
+                timeRangeKPIsKeys: (timeRangeData && timeRangeData.nonprofit_kpis) ? Object.keys(timeRangeData.nonprofit_kpis).slice(0, 10) : []
             });
 
             if (typeof updatePrograms === 'function') {
@@ -3848,48 +3913,7 @@ function updateMetrics(data, timeRange = 'this_year', sourceTargets = {}) {
     });
 }
 
-function updateRevenueByAccount(data) {
-    if (!data || !data.accounts) {
-        console.warn('⚠️ updateRevenueByAccount: Missing data or data.accounts', data);
-        return;
-    }
-    const sectionContainer = document.getElementById('revenue-expenses-section-container');
-    if (sectionContainer) sectionContainer.style.display = 'block';
-    
-    const tbody = document.getElementById('revenue-accounts-tbody');
-    const tfoot = document.getElementById('revenue-accounts-tfoot');
-    const totalCell = document.getElementById('revenue-accounts-total');
-    
-    // Get total revenue for percentage calculations
-    const totalRevenue = data.total_revenue || data.accounts.reduce((sum, account) => sum + (account.total || 0), 0);
-    
-    if (tbody) {
-        tbody.innerHTML = '';
-        
-        // Sort accounts by total (descending)
-        const sortedAccounts = [...data.accounts].sort((a, b) => (b.total || 0) - (a.total || 0));
-        
-        // Render each account as a row
-        sortedAccounts.forEach((account) => {
-            const percentage = account.percentage || (totalRevenue > 0 ? ((account.total || 0) / totalRevenue * 100) : 0);
-            const row = document.createElement('tr');
-            row.style.borderBottom = '1px solid #e5e7eb';
-            row.innerHTML = `
-                <td style="padding: 12px;">${escapeHtml(account.account_name || 'N/A')}</td>
-                <td style="padding: 12px; text-align: right; font-weight: 500; color: #10b981;">$${Math.round(account.total || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
-                <td style="padding: 12px; text-align: right; color: var(--text-secondary);">${account.count || 0}</td>
-                <td style="padding: 12px; text-align: right; color: var(--text-secondary);">${percentage.toFixed(1)}%</td>
-            `;
-            tbody.appendChild(row);
-        });
-    }
-    
-    // Calculate total revenue from accounts
-    if (tfoot && totalCell && totalRevenue > 0) {
-        tfoot.style.display = 'table-footer-group';
-        totalCell.textContent = `$${Math.round(totalRevenue).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-    }
-}
+// Removed: updateRevenueByAccount function - Revenue by Account panel removed
 
 async function toggleBreakdown(row, breakdown, sourceTotal) {
     const isExpanded = row.dataset.expanded === 'true';
@@ -4231,7 +4255,10 @@ function updateTopDonors(data) {
     }
     if (coverageDetailsEl && data.coverage_details) {
         const details = data.coverage_details;
-        coverageDetailsEl.textContent = `${details.donations_with_contact.toLocaleString()} of ${details.total_donations.toLocaleString()} donations`;
+        // Handle both field name formats: 'donations_with_contact' or 'donations_matched'
+        const donationsWithContact = details.donations_with_contact !== undefined ? details.donations_with_contact : details.donations_matched || 0;
+        const totalDonations = details.total_donations || 0;
+        coverageDetailsEl.textContent = `${donationsWithContact.toLocaleString()} of ${totalDonations.toLocaleString()} donations`;
     }
     
     // Clear loading message
@@ -4246,12 +4273,20 @@ function updateTopDonors(data) {
     data.donors.forEach((donor, index) => {
         const row = document.createElement('tr');
         row.style.borderBottom = '1px solid #e5e7eb';
+        // Handle both field name formats: 'name'/'donor_name' and 'last_donation'/'last_donation_date'
+        const donorName = donor.name || donor.donor_name || 'Anonymous';
+        const totalAmount = donor.total_amount || 0;
+        const donationCount = donor.donation_count || 0;
+        const avgAmount = donor.avg_donation || donor.avg_amount || 0;
+        const lastDonation = donor.last_donation || donor.last_donation_date;
+        const lastDonationDate = lastDonation ? new Date(lastDonation).toLocaleDateString() : 'N/A';
+        
         row.innerHTML = `
-            <td style="padding: 12px; font-weight: 500; color: var(--text-primary);">${escapeHtml(donor.donor_name || 'Anonymous')}</td>
-            <td style="padding: 12px; text-align: right; font-weight: 500; color: #10b981;">${formatCurrency(donor.total_amount || 0)}</td>
-            <td style="padding: 12px; text-align: right; color: var(--text-secondary);">${donor.donation_count || 0}</td>
-            <td style="padding: 12px; text-align: right; color: var(--text-secondary);">${formatCurrency(donor.avg_amount || 0)}</td>
-            <td style="padding: 12px; text-align: right; color: var(--text-secondary);">${donor.last_donation_date ? new Date(donor.last_donation_date).toLocaleDateString() : 'N/A'}</td>
+            <td style="padding: 12px; font-weight: 500; color: var(--text-primary);">${escapeHtml(donorName)}</td>
+            <td style="padding: 12px; text-align: right; font-weight: 500; color: #10b981;">${formatCurrency(totalAmount)}</td>
+            <td style="padding: 12px; text-align: right; color: var(--text-secondary);">${donationCount}</td>
+            <td style="padding: 12px; text-align: right; color: var(--text-secondary);">${formatCurrency(avgAmount)}</td>
+            <td style="padding: 12px; text-align: right; color: var(--text-secondary);">${lastDonationDate}</td>
         `;
         tbody.appendChild(row);
     });
@@ -4446,48 +4481,7 @@ function updatePrograms(data) {
     });
 }
 
-function updateExpensesByAccount(data) {
-    if (!data || !data.accounts) {
-        console.warn('⚠️ updateExpensesByAccount: Missing data or data.accounts', data);
-        return;
-    }
-    const sectionContainer = document.getElementById('revenue-expenses-section-container');
-    if (sectionContainer) sectionContainer.style.display = 'block';
-    
-    const tbody = document.getElementById('expenses-by-account-tbody');
-    const tfoot = document.getElementById('expenses-by-account-tfoot');
-    const totalCell = document.getElementById('expenses-by-account-total');
-    
-    // Get total expenses for percentage calculations
-    const totalExpenses = data.total_expenses || data.accounts.reduce((sum, account) => sum + (account.total || 0), 0);
-    
-    if (tbody) {
-        tbody.innerHTML = '';
-        
-        // Sort accounts by total (descending)
-        const sortedAccounts = [...data.accounts].sort((a, b) => (b.total || 0) - (a.total || 0));
-        
-        // Render each account as a row
-        sortedAccounts.forEach((account) => {
-            const percentage = account.percentage || (totalExpenses > 0 ? ((account.total || 0) / totalExpenses * 100) : 0);
-            const row = document.createElement('tr');
-            row.style.borderBottom = '1px solid #e5e7eb';
-            row.innerHTML = `
-                <td style="padding: 12px;">${escapeHtml(account.account_name || 'N/A')}</td>
-                <td style="padding: 12px; text-align: right; font-weight: 500; color: #ef4444;">$${Math.round(account.total || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
-                <td style="padding: 12px; text-align: right; color: var(--text-secondary);">${account.count || 0}</td>
-                <td style="padding: 12px; text-align: right; color: var(--text-secondary);">${percentage.toFixed(1)}%</td>
-            `;
-            tbody.appendChild(row);
-        });
-    }
-    
-    // Calculate total expenses from accounts
-    if (tfoot && totalCell && totalExpenses > 0) {
-        tfoot.style.display = 'table-footer-group';
-        totalCell.textContent = `$${Math.round(totalExpenses).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-    }
-}
+// Removed: updateExpensesByAccount function - Expenses by Account panel removed
 
 
 // No dashboard access password - encryption password is handled by decrypt.js

@@ -439,7 +439,14 @@ function showPasswordDialog() {
  * Priority: 1) User input, 2) API token, 3) Session storage, 4) Password dialog
  */
 async function getDecryptionKey() {
-    // Don't persist password - always prompt
+    // Check sessionStorage first - password persists during session but clears on browser close
+    const STORAGE_KEY = 'maps_dashboard_decryption_key';
+    const storedPassword = sessionStorage.getItem(STORAGE_KEY);
+    if (storedPassword) {
+        console.log('🔑 Using stored decryption key from session');
+        return storedPassword;
+    }
+    
     // Try to get from API token (if authenticated)
     const apiToken = localStorage.getItem('api_token') || 
                      sessionStorage.getItem('api_token');
@@ -448,10 +455,12 @@ async function getDecryptionKey() {
         return apiToken;
     }
     
-    // Show password dialog (no persistence)
+    // Show password dialog - prompt on initial page load
     const password = await showPasswordDialog();
     if (password) {
-        // Don't store - password will be asked again next time
+        // Store in sessionStorage for the duration of the session
+        sessionStorage.setItem(STORAGE_KEY, password);
+        console.log('🔑 Decryption key stored in sessionStorage');
         return password;
     }
     
@@ -516,9 +525,14 @@ async function loadDecryptedDashboard(timeRange = 'this_year') {
                 crema: data.crema || {}
             };
         } else {
-            // Fallback: return the data as-is (might be old format)
-            console.warn(`⚠️ Time range '${timeRange}' not found in consolidated data, returning full data`);
-            return data;
+            // Fallback: try to find a similar time range or return error
+            console.warn(`⚠️ Time range '${timeRange}' not found in consolidated data`);
+            const availableRanges = data.metrics ? Object.keys(data.metrics) : [];
+            console.warn(`   Available time ranges: ${availableRanges.join(', ')}`);
+            
+            // Try to find a fallback (e.g., if 'this_month' not found, try 'month_2025_11')
+            // For now, throw an error so the UI can handle it gracefully
+            throw new Error(`Time range '${timeRange}' not found in cache. Available ranges: ${availableRanges.join(', ')}`);
         }
     } catch (error) {
         console.error('❌ Failed to load/decrypt dashboard:', error);
