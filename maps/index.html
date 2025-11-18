@@ -3403,26 +3403,75 @@ async function fetchMetricsWithTimeRange(timeRange = 'this_year') {
             }
         } else {
             // Cache mode: sequential loading from cache files
-            metrics = await crema.getMetrics(kandaqTimeRange);
-            boardMetrics = metrics;
-            
-            try {
-                const cacheData = await crema.loadCacheFile(kandaqTimeRange);
-                sourceTargets = cacheData?.source_targets || {};
-                if (cacheData?.metrics) {
-                    if (cacheData.metrics[kandaqTimeRange]?.metrics) {
-                        boardMetrics = cacheData.metrics[kandaqTimeRange].metrics;
-                        console.log(`✅ Loaded board metrics from nested cache: ${kandaqTimeRange}`);
-                    } else if (cacheData.metrics[kandaqTimeRange]) {
-                        boardMetrics = cacheData.metrics[kandaqTimeRange];
-                        console.log(`✅ Loaded board metrics from cache: ${kandaqTimeRange}`);
-                    } else {
-                        boardMetrics = cacheData.metrics;
-                        console.log('✅ Loaded board metrics from flat cache structure', Object.keys(boardMetrics).slice(0, 10));
+            // For encrypted files, use loadDecryptedDashboard if available
+            if (typeof loadDecryptedDashboard === 'function') {
+                try {
+                    console.log('📦 Loading from encrypted cache file...');
+                    const cacheData = await loadDecryptedDashboard(kandaqTimeRange);
+                    // loadDecryptedDashboard returns: { metrics: { metrics: {...}, board_analyses: {...}, ... }, source_targets: {...} }
+                    // The time range object has a nested 'metrics' property with the actual metric values
+                    // and 'board_analyses' with board analysis data
+                    const timeRangeData = cacheData?.metrics || {};
+                    metrics = timeRangeData?.metrics || cacheData?.metrics?.metrics || cacheData?.metrics || cacheData?.data?.metrics;
+                    sourceTargets = cacheData?.source_targets || {};
+                    // boardMetrics should include both metrics and board_analyses
+                    // Check multiple possible locations for board analyses
+                    const boardAnalyses = timeRangeData?.board_analyses || 
+                                        timeRangeData?.boardAnalyses || 
+                                        timeRangeData?.board_analyses_data ||
+                                        metrics?.board_analyses ||
+                                        metrics?.boardAnalyses ||
+                                        {};
+                    // Also extract nonprofit_kpis if they exist at the time range level
+                    const nonprofitKPIs = timeRangeData?.nonprofit_kpis || 
+                                         metrics?.nonprofit_kpis ||
+                                         {};
+                    boardMetrics = {
+                        ...metrics,
+                        ...boardAnalyses,
+                        nonprofit_kpis: nonprofitKPIs
+                    };
+                    console.log('✅ Loaded metrics from encrypted cache successfully', {
+                        hasMetrics: !!metrics,
+                        metricsKeys: metrics ? Object.keys(metrics).slice(0, 5) : [],
+                        hasBoardAnalyses: !!(timeRangeData?.board_analyses || timeRangeData?.boardAnalyses),
+                        boardAnalysesKeys: timeRangeData?.board_analyses ? Object.keys(timeRangeData.board_analyses).slice(0, 5) : []
+                    });
+                } catch (e) {
+                    // If encryption fails, try CremaClient (for unencrypted files)
+                    console.log('⚠️ Encrypted file load failed, trying CremaClient...', e.message);
+                    metrics = await crema.getMetrics(kandaqTimeRange);
+                    boardMetrics = metrics;
+                    try {
+                        const cacheData = await crema.loadCacheFile(kandaqTimeRange);
+                        sourceTargets = cacheData?.source_targets || {};
+                    } catch (e2) {
+                        sourceTargets = {};
                     }
                 }
-            } catch (e) {
-                console.warn('⚠️ Could not load full cache file:', e);
+            } else {
+                // No encryption support, use CremaClient directly
+                metrics = await crema.getMetrics(kandaqTimeRange);
+                boardMetrics = metrics;
+                
+                try {
+                    const cacheData = await crema.loadCacheFile(kandaqTimeRange);
+                    sourceTargets = cacheData?.source_targets || {};
+                    if (cacheData?.metrics) {
+                        if (cacheData.metrics[kandaqTimeRange]?.metrics) {
+                            boardMetrics = cacheData.metrics[kandaqTimeRange].metrics;
+                            console.log(`✅ Loaded board metrics from nested cache: ${kandaqTimeRange}`);
+                        } else if (cacheData.metrics[kandaqTimeRange]) {
+                            boardMetrics = cacheData.metrics[kandaqTimeRange];
+                            console.log(`✅ Loaded board metrics from cache: ${kandaqTimeRange}`);
+                        } else {
+                            boardMetrics = cacheData.metrics;
+                            console.log('✅ Loaded board metrics from flat cache structure', Object.keys(boardMetrics).slice(0, 10));
+                        }
+                    }
+                } catch (e) {
+                    console.warn('⚠️ Could not load full cache file:', e);
+                }
             }
         }
         
@@ -3464,10 +3513,51 @@ async function fetchMetricsWithTimeRange(timeRange = 'this_year') {
             }
             
             // Update donation insights (frequency patterns and monthly patterns)
-            const donationInsights = boardMetrics?.nonprofit_kpis?.donation_insights || metrics?.nonprofit_kpis?.donation_insights;
+            // Check multiple locations for nonprofit_kpis
+            const donationInsights = boardMetrics?.nonprofit_kpis?.donation_insights || 
+                                   metrics?.nonprofit_kpis?.donation_insights ||
+                                   timeRangeData?.nonprofit_kpis?.donation_insights ||
+                                   null;
             if (donationInsights && typeof updateDonationInsights === 'function') {
+                console.log('✅ Calling updateDonationInsights');
                 updateDonationInsights(donationInsights);
+            } else {
+                console.warn('⚠️ Donation Insights not updated:', { 
+                    hasData: !!donationInsights, 
+                    hasFunction: typeof updateDonationInsights === 'function',
+                    checkedLocations: ['boardMetrics.nonprofit_kpis.donation_insights', 'metrics.nonprofit_kpis.donation_insights', 'timeRangeData.nonprofit_kpis.donation_insights']
+                });
             }
+            
+            // Update top donors analysis
+            const topDonors = boardMetrics?.top_donors || 
+                            boardMetrics?.donor_analysis || 
+                            metrics?.top_donors || 
+                            metrics?.donor_analysis ||
+                            boardMetrics?.nonprofit_kpis?.top_donors ||
+                            metrics?.nonprofit_kpis?.top_donors ||
+                            timeRangeData?.nonprofit_kpis?.top_donors ||
+                            null;
+            if (topDonors && typeof updateTopDonors === 'function') {
+                console.log('✅ Calling updateTopDonors');
+                updateTopDonors(topDonors);
+            } else {
+                console.warn('⚠️ Top Donors not updated:', { 
+                    hasData: !!topDonors, 
+                    hasFunction: typeof updateTopDonors === 'function',
+                    checkedLocations: ['boardMetrics.top_donors', 'boardMetrics.donor_analysis', 'metrics.top_donors', 'metrics.donor_analysis', 'boardMetrics.nonprofit_kpis.top_donors']
+                });
+            }
+            
+            // Log nonprofit KPIs structure for debugging
+            console.log('📊 Nonprofit KPIs structure:', {
+                hasBoardMetricsKPIs: !!boardMetrics?.nonprofit_kpis,
+                hasMetricsKPIs: !!metrics?.nonprofit_kpis,
+                hasTimeRangeKPIs: !!timeRangeData?.nonprofit_kpis,
+                boardMetricsKPIsKeys: boardMetrics?.nonprofit_kpis ? Object.keys(boardMetrics.nonprofit_kpis).slice(0, 10) : [],
+                metricsKPIsKeys: metrics?.nonprofit_kpis ? Object.keys(metrics.nonprofit_kpis).slice(0, 10) : [],
+                timeRangeKPIsKeys: timeRangeData?.nonprofit_kpis ? Object.keys(timeRangeData.nonprofit_kpis).slice(0, 10) : []
+            });
 
             if (typeof updatePrograms === 'function') {
                 const programsData = boardMetrics?.programs || metrics?.programs || null;
@@ -4097,6 +4187,74 @@ function updateAccountTotals(data) {
             totalCell.textContent = `$${Math.round(data.total_expense).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
         }
     }
+}
+
+function updateTopDonors(data) {
+    console.log('🔍 updateTopDonors called with:', data);
+    
+    // Show section when data is available (even if empty)
+    const sectionContainer = document.getElementById('top-donors-section-container');
+    if (sectionContainer) sectionContainer.style.display = 'block';
+    
+    if (!data) {
+        console.warn('⚠️ updateTopDonors: No data provided');
+        const tbody = document.getElementById('top-donors-tbody');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No donor data available</td></tr>';
+        }
+        return;
+    }
+    
+    if (!data.donors) {
+        console.warn('⚠️ updateTopDonors: No donors array in data. Data keys:', Object.keys(data));
+        const tbody = document.getElementById('top-donors-tbody');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No donor data available</td></tr>';
+        }
+        return;
+    }
+    
+    const tbody = document.getElementById('top-donors-tbody');
+    const coverageEl = document.getElementById('donor-coverage');
+    const coverageDetailsEl = document.getElementById('donor-coverage-details');
+    
+    if (!tbody) {
+        console.error('❌ updateTopDonors: top-donors-tbody element not found');
+        return;
+    }
+    
+    console.log('✅ updateTopDonors: Found', data.donors.length, 'donors');
+    
+    // Update coverage info
+    if (coverageEl && data.coverage) {
+        coverageEl.textContent = data.coverage;
+    }
+    if (coverageDetailsEl && data.coverage_details) {
+        const details = data.coverage_details;
+        coverageDetailsEl.textContent = `${details.donations_with_contact.toLocaleString()} of ${details.total_donations.toLocaleString()} donations`;
+    }
+    
+    // Clear loading message
+    tbody.innerHTML = '';
+    
+    // Add donor rows
+    if (data.donors.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No donor data available</td></tr>';
+        return;
+    }
+    
+    data.donors.forEach((donor, index) => {
+        const row = document.createElement('tr');
+        row.style.borderBottom = '1px solid #e5e7eb';
+        row.innerHTML = `
+            <td style="padding: 12px; font-weight: 500; color: var(--text-primary);">${escapeHtml(donor.donor_name || 'Anonymous')}</td>
+            <td style="padding: 12px; text-align: right; font-weight: 500; color: #10b981;">${formatCurrency(donor.total_amount || 0)}</td>
+            <td style="padding: 12px; text-align: right; color: var(--text-secondary);">${donor.donation_count || 0}</td>
+            <td style="padding: 12px; text-align: right; color: var(--text-secondary);">${formatCurrency(donor.avg_amount || 0)}</td>
+            <td style="padding: 12px; text-align: right; color: var(--text-secondary);">${donor.last_donation_date ? new Date(donor.last_donation_date).toLocaleDateString() : 'N/A'}</td>
+        `;
+        tbody.appendChild(row);
+    });
 }
 
 function updateDonationInsights(data) {
