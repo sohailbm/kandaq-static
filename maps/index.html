@@ -4346,6 +4346,8 @@ async function checkPassword() {
         const password = await showPasswordDialog();
         if (password === DASHBOARD_PASSWORD) {
             sessionStorage.setItem('dashboard_password_verified', 'true');
+            // Also store password for data decryption (reuse same password)
+            sessionStorage.setItem('dashboard_decryption_key', password);
             return true;
         } else if (password !== null) {
             alert('Incorrect password. Access denied.');
@@ -4356,6 +4358,8 @@ async function checkPassword() {
         const password = prompt('Enter password to access dashboard:');
         if (password === DASHBOARD_PASSWORD) {
             sessionStorage.setItem('dashboard_password_verified', 'true');
+            // Also store password for data decryption (reuse same password)
+            sessionStorage.setItem('dashboard_decryption_key', password);
             return true;
         } else if (password !== null) {
             alert('Incorrect password. Access denied.');
