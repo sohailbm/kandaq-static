@@ -4340,14 +4340,26 @@ async function checkPassword() {
         return true;
     }
     
-    // Prompt for password
-    const password = prompt('Enter password to access dashboard:');
-    if (password === DASHBOARD_PASSWORD) {
-        sessionStorage.setItem('dashboard_password_verified', 'true');
-        return true;
-    } else if (password !== null) {
-        alert('Incorrect password. Access denied.');
-        return false;
+    // Use custom password dialog (from decrypt.js)
+    if (typeof showPasswordDialog === 'function') {
+        const password = await showPasswordDialog();
+        if (password === DASHBOARD_PASSWORD) {
+            sessionStorage.setItem('dashboard_password_verified', 'true');
+            return true;
+        } else if (password !== null) {
+            alert('Incorrect password. Access denied.');
+            return false;
+        }
+    } else {
+        // Fallback to prompt if showPasswordDialog not available
+        const password = prompt('Enter password to access dashboard:');
+        if (password === DASHBOARD_PASSWORD) {
+            sessionStorage.setItem('dashboard_password_verified', 'true');
+            return true;
+        } else if (password !== null) {
+            alert('Incorrect password. Access denied.');
+            return false;
+        }
     }
     
     return false;
