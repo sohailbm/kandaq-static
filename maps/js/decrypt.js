@@ -476,20 +476,32 @@ async function loadDecryptedDashboard(timeRange = 'this_year') {
     try {
         // Load encrypted data file
         // Resolve path relative to current page location
-        // If path ends with /app, use it; otherwise append /app
+        // Handle both local development (/tenants/maps/app/) and production (/maps/) paths
         let basePath = window.location.pathname;
-        if (!basePath.endsWith('/app')) {
-            if (basePath.endsWith('/app/')) {
-                basePath = basePath.slice(0, -1);
-            } else {
-                basePath = basePath.replace(/\/[^/]*$/, '');
-                if (!basePath.endsWith('/app')) {
-                    basePath = '/tenants/maps/app';
-                }
-            }
+        
+        // Remove trailing filename if present (e.g., /maps/index.html -> /maps)
+        basePath = basePath.replace(/\/[^/]+\.html?$/, '');
+        
+        // Handle production deployment path (/maps/)
+        if (basePath.startsWith('/maps') || basePath === '/maps') {
+            basePath = '/maps';
         }
+        // Handle local development path (/tenants/maps/app/)
+        else if (basePath.includes('/tenants/maps/app')) {
+            basePath = basePath.replace(/\/tenants\/maps\/app.*$/, '/tenants/maps/app');
+        }
+        // Fallback: try to detect from pathname
+        else if (basePath.includes('/app')) {
+            basePath = basePath.replace(/\/app.*$/, '/app');
+        }
+        // Default fallback
+        else {
+            basePath = '/maps'; // Default to production path
+        }
+        
         // Load consolidated dashboard_data.json (contains all time ranges)
         const dataPath = `${basePath}/data/dashboard_data.json`;
+        console.log(`📦 Loading dashboard data from: ${dataPath}`);
         const response = await fetch(dataPath + `?t=${Date.now()}`, { cache: 'no-store' });
         if (!response.ok) {
             throw new Error(`Failed to load dashboard data: ${response.status}`);
