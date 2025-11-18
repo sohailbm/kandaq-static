@@ -94,15 +94,31 @@ class CremaClient {
         if (this.cacheDir.startsWith('/')) {
             return `${this.cacheDir}/dashboard_data.json`;
         } else if (typeof window !== 'undefined') {
-            const currentPath = window.location.pathname;
-            const appMatch = currentPath.match(/(\/tenants\/[^/]+\/app)(?:\/|$)/);
-            let basePath;
-            if (appMatch) {
-                basePath = appMatch[1];
-            } else {
-                const tenantMatch = currentPath.match(/\/([^/]+)(?:\/|$)/);
-                basePath = tenantMatch ? `/${tenantMatch[1]}/app` : '/app';
+            // Handle both local development (/tenants/maps/app/) and production (/maps/) paths
+            let basePath = window.location.pathname;
+            
+            // Remove trailing filename if present (e.g., /maps/index.html -> /maps)
+            basePath = basePath.replace(/\/[^/]+\.html?$/, '');
+            
+            // Handle production deployment path (/maps/)
+            if (basePath.startsWith('/maps') || basePath === '/maps') {
+                basePath = '/maps';
             }
+            // Handle local development path (/tenants/maps/app/)
+            else if (basePath.includes('/tenants/maps/app')) {
+                basePath = basePath.replace(/\/tenants\/maps\/app.*$/, '/tenants/maps/app');
+            }
+            // Try to detect from pathname
+            else {
+                const appMatch = basePath.match(/(\/tenants\/[^/]+\/app)(?:\/|$)/);
+                if (appMatch) {
+                    basePath = appMatch[1];
+                } else {
+                    const tenantMatch = basePath.match(/\/([^/]+)(?:\/|$)/);
+                    basePath = tenantMatch ? `/${tenantMatch[1]}/app` : '/maps'; // Default to production path
+                }
+            }
+            
             return `${basePath}/${this.cacheDir}/dashboard_data.json`;
         } else {
             return `${this.cacheDir}/dashboard_data.json`;
