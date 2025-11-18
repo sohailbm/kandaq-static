@@ -97,33 +97,56 @@ async function decryptSensitiveFields(data, password) {
     
     const decrypted = JSON.parse(JSON.stringify(data)); // Deep copy
     
-    // Decrypt sensitive fields
-    if (decrypted.metrics) {
-        // Decrypt top donors
-        if (decrypted.metrics.top_donors && 
-            decrypted.metrics.top_donors._encrypted) {
-            console.log('🔓 Decrypting top_donors');
-            decrypted.metrics.top_donors = await decryptValue(
-                decrypted.metrics.top_donors._data,
-                key
-            );
+    // Decrypt ALL encrypted fields recursively
+    async function decryptDataStructure(obj) {
+        if (obj === null || obj === undefined) {
+            return obj;
         }
         
-        // Decrypt other encrypted fields
-        const encryptedFields = [
-            'revenue_quickbooks',
-            'expenses_quickbooks',
-            'net_income_quickbooks'
-        ];
+        // Check if this entire object is encrypted
+        if (typeof obj === 'object' && obj._encrypted && obj._data) {
+            return await decryptValue(obj._data, key);
+        }
         
-        for (const field of encryptedFields) {
-            if (decrypted.metrics[field] && 
-                decrypted.metrics[field]._encrypted) {
-                decrypted.metrics[field] = await decryptValue(
-                    decrypted.metrics[field]._data,
-                    key
-                );
+        // Otherwise, decrypt fields within the object
+        if (Array.isArray(obj)) {
+            return await Promise.all(obj.map(item => decryptDataStructure(item)));
+        }
+        
+        if (typeof obj === 'object') {
+            const decryptedObj = {};
+            for (const [fieldKey, fieldValue] of Object.entries(obj)) {
+                // Skip encryption metadata
+                if (fieldKey === '_encryption' || fieldKey === '_encrypted' || fieldKey === '_data') {
+                    continue;
+                }
+                
+                // Recursively decrypt nested structures
+                decryptedObj[fieldKey] = await decryptDataStructure(fieldValue);
             }
+            return decryptedObj;
+        }
+        
+        // Primitive values (strings, numbers, booleans) are returned as-is
+        return obj;
+    }
+    
+    // Decrypt metrics structure
+    if (decrypted.metrics) {
+        console.log('🔓 Decrypting metrics data');
+        decrypted.metrics = await decryptDataStructure(decrypted.metrics);
+    }
+    
+    // Decrypt crema data if present
+    if (decrypted.crema) {
+        console.log('🔓 Decrypting crema data');
+        decrypted.crema = await decryptDataStructure(decrypted.crema);
+    }
+    
+    // Decrypt other top-level structures
+    for (const key of ['source_targets', 'all_metrics_data']) {
+        if (decrypted[key]) {
+            decrypted[key] = await decryptDataStructure(decrypted[key]);
         }
     }
     

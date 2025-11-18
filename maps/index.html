@@ -4330,131 +4330,13 @@ function updateExpensesByAccount(data) {
 }
 
 
-// Password protection for dashboard
-// Password is loaded from secure config at runtime (not hardcoded)
-// For static deployment, password is injected during build from secure source
-let DASHBOARD_PASSWORD = null;
-
-// Load password from secure source (injected at build time from GitHub Secrets)
-async function loadDashboardPassword() {
-    if (DASHBOARD_PASSWORD) {
-        return DASHBOARD_PASSWORD;
-    }
-    
-    // Password is injected by build process from GitHub Secrets
-    // Format: window.DASHBOARD_PASSWORD_ENV = 'password';
-    const envPassword = window.DASHBOARD_PASSWORD_ENV;
-    if (envPassword) {
-        DASHBOARD_PASSWORD = envPassword;
-        return DASHBOARD_PASSWORD;
-    }
-    
-    // Fallback: password not configured (should not happen in production)
-    console.error('❌ Dashboard password not configured');
-    throw new Error('Dashboard password not configured. Please contact administrator.');
-}
-
-async function checkPassword() {
-    // Always prompt for password (no persistence)
-    // Load password from secure source
-    const expectedPassword = await loadDashboardPassword();
-    
-    // Use custom password dialog (from decrypt.js)
-    if (typeof showPasswordDialog === 'function') {
-        const password = await showPasswordDialog();
-        if (password === expectedPassword) {
-            // Don't persist - password will be asked again next time
-            return true;
-        } else if (password !== null) {
-            alert('Incorrect password. Access denied.');
-            return false;
-        }
-    } else {
-        // Fallback to prompt if showPasswordDialog not available
-        const password = prompt('Enter password to access dashboard:');
-        if (password === expectedPassword) {
-            // Don't persist - password will be asked again next time
-            return true;
-        } else if (password !== null) {
-            alert('Incorrect password. Access denied.');
-            return false;
-        }
-    }
-    
-    return false;
-}
-
-function hideDashboardContent() {
-    // Hide main content
-    const mainContent = document.querySelector('.main-content') || document.querySelector('main') || document.body;
-    if (mainContent) {
-        mainContent.style.display = 'none';
-    }
-    
-    // Show password prompt overlay
-    const overlay = document.createElement('div');
-    overlay.id = 'password-overlay';
-    overlay.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(135deg, #A51D35 0%, #8B1A2E 50%, #f0f4f8 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10000;
-    `;
-    overlay.innerHTML = `
-        <div style="background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; max-width: 400px;">
-            <h2 style="color: #A51D35; margin-bottom: 1rem;">Dashboard Access</h2>
-            <p style="color: #6B7280; margin-bottom: 1.5rem;">This dashboard is password protected.</p>
-            <button id="password-prompt-btn" style="background: #A51D35; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 500;">
-                Enter Password
-            </button>
-        </div>
-    `;
-    document.body.appendChild(overlay);
-    
-    // Add click handler
-    document.getElementById('password-prompt-btn').addEventListener('click', async () => {
-        const authorized = await checkPassword();
-        if (authorized) {
-            overlay.remove();
-            const mainContent = document.querySelector('.main-content') || document.querySelector('main') || document.body;
-            if (mainContent) {
-                mainContent.style.display = '';
-            }
-            // Initialize dashboard after password is verified
-            initializeDashboard();
-        }
-    });
-}
-
-function showDashboardContent() {
-    const overlay = document.getElementById('password-overlay');
-    if (overlay) {
-        overlay.remove();
-    }
-    const mainContent = document.querySelector('.main-content') || document.querySelector('main') || document.body;
-    if (mainContent) {
-        mainContent.style.display = '';
-    }
-}
+// No dashboard access password - encryption password is handled by decrypt.js
+// Password is only used client-side to decrypt encrypted data files
+// Users will be prompted for password when decrypting data (via getDecryptionKey in decrypt.js)
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Initializing app for tenant:', TENANT_ID);
-    
-    // Check password first
-    const authorized = await checkPassword();
-    if (!authorized) {
-        hideDashboardContent();
-        return; // Stop initialization if password is wrong
-    }
-    
-    showDashboardContent();
     initializeDashboard();
 });
 
