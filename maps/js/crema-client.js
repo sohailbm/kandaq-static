@@ -81,7 +81,7 @@ class CremaClient {
             throw new Error(`Cache file missing or invalid for time range: ${timeRange}`);
         }
         
-        // Store in memory
+        // Store in memory with full structure for consistency
         this._cache.set(cacheKey, {
             data: cacheData,
             timestamp: Date.now()

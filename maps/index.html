@@ -1236,7 +1236,9 @@ async function fetchCremaData() {
         
         if (CREMA_DATA) {
             // Extract all entities from sources for backward compatibility
-            const allEntities = (CREMA_DATA.sources || []).flatMap(s => s.entities || []);
+            // Ensure sources is an array before calling flatMap
+            const sources = Array.isArray(CREMA_DATA.sources) ? CREMA_DATA.sources : [];
+            const allEntities = sources.flatMap(s => (s && Array.isArray(s.entities)) ? s.entities : []);
             if (typeof updateEntityCounts === 'function') {
                 updateEntityCounts(allEntities);
             }
